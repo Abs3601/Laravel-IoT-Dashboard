@@ -1,7 +1,6 @@
 <?php
 
+use App\Http\Controllers\deviceController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    return view('welcome');
-});
+Route::get('/', [deviceController::class, 'index']);

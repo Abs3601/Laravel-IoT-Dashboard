@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('entity_type');
             $table->string('entity_id')->index();
             $table->string('state');
-            $table->timestamp('recorded_at')->useCurrent();
+            $table->timestamp('created_at')->useCurrent();
         });
     }
 
