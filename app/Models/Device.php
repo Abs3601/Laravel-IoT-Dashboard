@@ -4,15 +4,14 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class IoTEvent extends Model
+class Device extends Model
 {
-    protected $table = 'iot_events';
+    protected $table = 'devices';
     public $timestamps = false;
-
     protected $fillable = [
         'entity_type',
         'entity_id',
-        'state',
-        'recorded_at',
+        'current_state',
+        'last_seen_at',
     ];
 }

@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use App\Models\IoTEvent;
+use App\Models\Device;
 use PhpMqtt\Client\Facades\MQTT;
 
 
@@ -54,7 +55,16 @@ class MqttLightListener extends Command
                 'created_at' => now(),
             ]);
 
+             Device::updateOrCreate([
+                'entity_type' => $entityType, 
+                'entity_id' => $entityId,
+                'current_state' => $state, 
+                // 'last_seen_at' => now()
+             ]);
+
             $this->info("Stored: {$entityType} {$entityId} = {$state}");
+
+            
         }, 0);
 
         $this->info('Listening for light state updates...');
