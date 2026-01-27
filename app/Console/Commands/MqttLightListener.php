@@ -35,7 +35,7 @@ class MqttLightListener extends Command
         /** @var \PhpMqtt\Client\Contracts\MqttClient $mqtt */
         $mqtt = MQTT::connection();
 
-        $mqtt->subscribe('homeassistant/light/+/state', function (string $topic, string $message) {
+        $mqtt->subscribe('homeassistant/sensor/+/state', function (string $topic, string $message) {
 
             $parts = explode('/', $topic);
 
@@ -55,12 +55,14 @@ class MqttLightListener extends Command
                 'created_at' => now(),
             ]);
 
+
              Device::updateOrCreate([
                 'entity_type' => $entityType, 
-                'entity_id' => $entityId,
-                'current_state' => $state, 
-                // 'last_seen_at' => now()
-             ]);
+                'entity_id' => $entityId], 
+                ['current_state' => $state, 
+                'last_seen_at' => now()
+                ]);
+            
 
             $this->info("Stored: {$entityType} {$entityId} = {$state}");
 
