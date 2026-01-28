@@ -9,3 +9,24 @@
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
 }
+
+.card-body{
+    @apply bg-white dark:bg-gray-800 shadow-md rounded-lg p-6;
+    @apply transition duration-300 ease-in-out transform hover:scale-105;
+    @apply border border-gray-200 dark:border-gray-700;
+    @apply hover:border-blue-500;
+    @apply mb-4;
+}
+
+.card-container{
+    @apply max-w-md mx-auto;
+    color: white;
+
+}
+
+.card{
+    width: 30vw;
+    margin: auto;
+
+}
+
