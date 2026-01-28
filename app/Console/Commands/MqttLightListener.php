@@ -35,7 +35,7 @@ class MqttLightListener extends Command
         /** @var \PhpMqtt\Client\Contracts\MqttClient $mqtt */
         $mqtt = MQTT::connection();
 
-        $mqtt->subscribe('homeassistant/sensor/+/state', function (string $topic, string $message) {
+        $mqtt->subscribe('homeassistant/light/+/state', function (string $topic, string $message) {
 
             $parts = explode('/', $topic);
 

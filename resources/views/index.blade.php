@@ -16,7 +16,7 @@
                     <div>
                         <h1 class="text-3xl font-bold">{{ $device['entity_type'] }}</h1>
                         <p class="mt-4 text-base-content/60">{{ $device['entity_id'] }}</p>
-                        <div class="text-sm text-gray-500 mt-2">{{ $device['state'] }}</div>
+                        <div class="text-sm text-gray-500 mt-2">{{ $device['current_state'] }}</div>
                     </div>
                 </div>
             </div>
