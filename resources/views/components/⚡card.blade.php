@@ -13,7 +13,7 @@ new class extends Component
 };
 ?>
 
-<div>
+<div wire:poll.500ms>
       @foreach($devices as $device)
             <div class="card bg-base-100 shadow mt-8">
                 <div class="card-body">
