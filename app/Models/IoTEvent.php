@@ -13,6 +13,12 @@ class IoTEvent extends Model
         'entity_type',
         'entity_id',
         'state',
-        'recorded_at',
+        'attributes',
+        'created_at',
+    ];
+
+    protected $casts = [
+        'attributes' => 'array',
+        'created_at' => 'datetime',
     ];
 }

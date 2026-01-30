@@ -11,11 +11,14 @@ class Device extends Model
     protected $fillable = [
         'entity_type',
         'entity_id',
+        'friendly_name',
         'current_state',
+        'attributes',
         'last_seen_at',
     ];
 
     protected $casts = [
         'last_seen_at' => 'datetime',
+        'attributes' => 'array',
     ];
 }

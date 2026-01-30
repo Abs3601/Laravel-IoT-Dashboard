@@ -16,6 +16,8 @@ return new class extends Migration
             $table->string('entity_type');
             $table->string('entity_id')->index();
             $table->string('current_state');
+            $table->unsignedTinyInteger('brightness')->nullable();
+            $table->unsignedTinyInteger('brightness_percent')->nullable();
             $table->timestamp('last_seen_at')->useCurrent();
         });
     }

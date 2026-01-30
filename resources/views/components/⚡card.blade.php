@@ -2,8 +2,7 @@
 
 use Livewire\Component;
 
-new class extends Component
-{
+new class extends Component {
     public $devices;
 
     public function mount($devices)
@@ -14,17 +13,27 @@ new class extends Component
 ?>
 
 {{-- wire:poll.500ms --}}
-<div wire:poll.500ms class="grid gap-6 grid-cols-[repeat(auto-fit,minmax(360px,1fr))]">
+<div wire:poll.500ms class="grid gap-6 grid-cols-[repeat(auto-fit,minmax(300px,1fr))]">
     @foreach($devices as $device)
         <div class="card bg-base-100 h-full">
             <div class="card-body flex flex-col h-full">
                 <div class="card-container flex items-start">
                     <div class="left-side">
-                        <h1 class="text-2xl font-semibold">{{ str_replace('_', ' ', ucfirst($device->entity_id)) }}</h1>
+                        <h1 class="text-2xl font-semibold">
+                            {{ str_replace('_', ' ', ucfirst($device->attributes['friendly_name'] ?? $device->entity_id)) }}
+                        </h1>
                         <p class="text-base font-normal">{{ ucfirst($device->current_state) }}</p>
                         <div class="mt-2">
-                        <p class="text-sm font-light text-gray-500">{{ ucfirst($device->entity_type) }}</p>
-                        <p class="text-sm font-light text-gray-500">Last Update: {{ optional($device->last_seen_at)->diffForHumans() ?? 'never' }}</p>
+                            @php
+                                $brightness = $device->attributes['brightness'] ?? null;
+                                $brightnessPercent = $brightness !== null ? round(($brightness / 255) * 100) : null;
+                            @endphp
+                            @if($brightnessPercent !== null)
+                                <p class="text-sm font-light text-gray-500">Brightness: {{ $brightnessPercent }}%</p>
+                            @endif
+                            <p class="text-sm font-light text-gray-500">Last Update:
+                                {{ optional($device->last_seen_at)->diffForHumans() ?? 'never' }}
+                            </p>
                         </div>
                     </div>
                     <div class="shrink-0 ml-auto">
