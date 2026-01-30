@@ -1,4 +1,5 @@
-@import 'tailwindcss';
+@import url("https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap");
+@import "tailwindcss";
 
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
@@ -6,27 +7,26 @@
 @source '../**/*.js';
 
 @theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
-        'Segoe UI Symbol', 'Noto Color Emoji';
+    --font-sans:
+        "Instrument Sans", ui-sans-serif, system-ui, sans-serif,
+        "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol",
+        "Noto Color Emoji";
+
+    --font-poppins: "Poppins", ui-sans-serif, system-ui, sans-serif;
+
+    --color-card-bg: #36312c;
 }
 
-.card-body{
-    @apply bg-white dark:bg-gray-800 shadow-md rounded-lg p-6;
+body {
+    @apply font-poppins;
+}
+
+.card-body {
+    @apply bg-white dark:bg-card-bg shadow-md rounded-3xl p-6 text-gray-900 dark:text-white;
     @apply transition duration-300 ease-in-out transform hover:scale-105;
     @apply border border-gray-200 dark:border-gray-700;
-    @apply hover:border-blue-500;
-    @apply mb-4;
 }
 
-.card-container{
-    @apply max-w-md mx-auto;
-    color: white;
-
+.container {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
 }
-
-.card{
-    width: 30vw;
-    margin: auto;
-
-}
-

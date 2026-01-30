@@ -11,7 +11,9 @@
         @livewireStyles
     </head>
     <body>
+        <div class="container mx-1 p-4">
         <livewire:card :devices="$devices" />
+        </div>
 
     </body>
 </html>

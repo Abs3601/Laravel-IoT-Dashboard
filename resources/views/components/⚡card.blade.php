@@ -13,16 +13,25 @@ new class extends Component
 };
 ?>
 
-<div wire:poll.500ms>
-      @foreach($devices as $device)
-            <div class="card bg-base-100 shadow mt-8">
-                <div class="card-body">
-                    <div class="card-container">
-                        <h1 class=" text-3xl font-bold">{{ $device['entity_type'] }}</h1>
-                        <p class="mt-4 text-base-content/60">{{ $device['entity_id'] }}</p>
-                        <div class="text-sm text-gray-500 mt-2">{{ $device['current_state'] }}</div>
+{{-- wire:poll.500ms --}}
+<div wire:poll.500ms class="grid gap-6 grid-cols-[repeat(auto-fit,minmax(360px,1fr))]">
+    @foreach($devices as $device)
+        <div class="card bg-base-100 h-full">
+            <div class="card-body flex flex-col h-full">
+                <div class="card-container flex items-start">
+                    <div class="left-side">
+                        <h1 class="text-2xl font-semibold">{{ str_replace('_', ' ', ucfirst($device->entity_id)) }}</h1>
+                        <p class="text-base font-normal">{{ ucfirst($device->current_state) }}</p>
+                        <div class="mt-2">
+                        <p class="text-sm font-light text-gray-500">{{ ucfirst($device->entity_type) }}</p>
+                        <p class="text-sm font-light text-gray-500">Last Update: {{ optional($device->last_seen_at)->diffForHumans() ?? 'never' }}</p>
+                        </div>
+                    </div>
+                    <div class="shrink-0 ml-auto">
+                        <img src="{{ URL::asset('/images/Lamp-Icon.svg') }}" alt="lamp icon" class="w-15 h-auto">
+                    </div>
                 </div>
             </div>
         </div>
-        @endforeach
+    @endforeach
 </div>

@@ -14,4 +14,8 @@ class Device extends Model
         'current_state',
         'last_seen_at',
     ];
+
+    protected $casts = [
+        'last_seen_at' => 'datetime',
+    ];
 }
