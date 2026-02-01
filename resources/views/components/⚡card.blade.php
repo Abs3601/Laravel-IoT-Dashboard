@@ -29,7 +29,16 @@ new class extends Component {
                                 $brightnessPercent = $brightness !== null ? round(($brightness / 255) * 100) : null;
                             @endphp
                             @if($brightnessPercent !== null)
-                                <p class="text-sm font-light text-gray-500">Brightness: {{ $brightnessPercent }}%</p>
+                                <div class="relative mb-2">
+                                    <input type="range" min="0" max="100" value="{{ $brightnessPercent }}"
+                                        class="brightness-slider w-full h-8 rounded appearance-none cursor-pointer"
+                                        style="background: linear-gradient(90deg, #fcd34d {{ $brightnessPercent }}%, #e5e7eb {{ $brightnessPercent }}%);"
+                                        oninput="this.style.background = 'linear-gradient(90deg, #fcd34d '+this.value+'%, #e5e7eb '+this.value+'%)'; this.nextElementSibling.textContent = this.value + '%';" />
+                                    <span
+                                        class="absolute top-0 left-0 right-0 h-8 flex items-center justify-center text-sm font-light text-white pointer-events-none">
+                                        {{ $brightnessPercent }}%
+                                    </span>
+                                </div>
                             @endif
                             <p class="text-sm font-light text-gray-500">Last Update:
                                 {{ optional($device->last_seen_at)->diffForHumans() ?? 'never' }}

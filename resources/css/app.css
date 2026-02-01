@@ -30,3 +30,26 @@ body {
 .container {
     @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
 }
+/* 
+/* Brightness Slider */
+.brightness-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    background-repeat: no-repeat;
+    background-size: 100% 100%;
+}
+
+.brightness-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 0;
+    height: 0;
+    background: transparent;
+}
+
+.brightness-slider::-moz-range-thumb {
+    width: 0;
+    height: 0;
+    border: none;
+    background: transparent;
+} 

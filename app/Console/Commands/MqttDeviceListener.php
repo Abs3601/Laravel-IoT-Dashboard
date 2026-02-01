@@ -33,7 +33,7 @@ class MqttDeviceListener extends Command
         /** @var \PhpMqtt\Client\Contracts\MqttClient $mqtt */
         $mqtt = MQTT::connection();
 
-        // Pattern: homeassistant/{entity_type}/{entity_id}/{attribute}
+        // Format: homeassistant/{entity_type}/{entity_id}/{attribute}
         $mqtt->subscribe('homeassistant/#', function (string $topic, string $message) {
 
             $parts = explode('/', $topic);
