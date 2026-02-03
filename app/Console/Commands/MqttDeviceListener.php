@@ -63,6 +63,7 @@ class MqttDeviceListener extends Command
             $updateData = [
                 'attributes' => $newAttributes,
                 'last_seen_at' => now(),
+                'device_group' => $this->extractDeviceGroup($entityId),
             ];
 
             if ($attribute === 'state') {
@@ -134,5 +135,40 @@ class MqttDeviceListener extends Command
         }
 
         return $trimmed;
+    }
+
+    /**
+     * Extract the base device group from an entity ID.
+     * Removes common sensor suffixes to group related entities together.
+     */
+    private function extractDeviceGroup(string $entityId): string
+    {
+        $suffixes = [
+            '_voltage',
+            '_current',
+            '_power',
+            '_signal_level',
+            '_current_consumption',
+            '_today_s_consumption',
+            '_this_month_s_consumption',
+            '_summation_delivered',
+            '_auto_off_at',
+            '_auto_off_enabled',
+            '_led',
+            '_cloud_connection',
+            '_overheated',
+            '_firmware',
+            '_turn_off_in',
+            '_start_up_behaviour',
+            '_identify',
+        ];
+
+        foreach ($suffixes as $suffix) {
+            if (str_ends_with($entityId, $suffix)) {
+                return str_replace($suffix, '', $entityId);
+            }
+        }
+
+        return $entityId;
     }
 }

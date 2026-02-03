@@ -11,6 +11,7 @@ class Device extends Model
     protected $fillable = [
         'entity_type',
         'entity_id',
+        'device_group',
         'friendly_name',
         'current_state',
         'attributes',

@@ -9,13 +9,44 @@ class deviceController extends Controller
 {
     public function index()
     {
-        $devices = Device::orderBy('entity_id')
+        $lights = Device::where('entity_type', 'light')
             ->latest('last_seen_at')
-            ->take(50)
-            ->where('entity_type', 'light')
             ->where('entity_id', 'NOT LIKE', '%browser%')
             ->get();
 
-        return view('index', ['devices' => $devices]);
+        // Get plug switches with their related sensors
+        $plugs = Device::where('entity_type', 'switch')
+            // ->where('entity_id', 'LIKE', '%plug%')
+            ->where('entity_id', 'NOT LIKE', '%auto_off%')
+            ->where('entity_id', 'NOT LIKE', '%led%')
+            ->get()
+            ->map(function ($plug) {
+                // Find all related sensors by device_group
+                $plug->sensors = Device::where('device_group', $plug->device_group)
+                    ->where('entity_type', 'sensor')
+                    ->get();
+                return $plug;
+            });
+
+        return view('index', [
+            'lights' => $lights,
+            'plugs' => $plugs,
+        ]);
+    }
+
+    public function showPlug(string $deviceGroup)
+    {
+        $plug = Device::where('entity_type', 'switch')
+            ->where('device_group', $deviceGroup)
+            ->firstOrFail();
+
+        $sensors = Device::where('device_group', $deviceGroup)
+            ->where('entity_type', 'sensor')
+            ->get();
+
+        return view('plug-detail', [
+            'plug' => $plug,
+            'sensors' => $sensors,
+        ]);
     }
 }
