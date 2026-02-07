@@ -17,6 +17,7 @@ class OnboardingController extends Controller
         Setting::set('mqtt_auth_username', $request->mqtt_auth_username);
         Setting::set('mqtt_auth_password', $request->mqtt_auth_password);
         Setting::set('mqtt_client_id', $request->mqtt_client_id);
+        Setting::set('onboarding_completed', true);
         return redirect()->route('home');
     }
 }
