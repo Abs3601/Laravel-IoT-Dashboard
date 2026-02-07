@@ -6,6 +6,7 @@ use Illuminate\Console\Command;
 use App\Models\IoTEvent;
 use App\Models\Device;
 use PhpMqtt\Client\Facades\MQTT;
+use App\Models\Setting;
 
 class MqttDeviceListener extends Command
 {
@@ -31,6 +32,7 @@ class MqttDeviceListener extends Command
         $this->info('Connecting to MQTT broker...');
 
         /** @var \PhpMqtt\Client\Contracts\MqttClient $mqtt */
+        config(['mqtt-client.connections.default.host' => Setting::get('mqtt_host'), 'mqtt-client.connections.default.port' => Setting::get('port'), 'mqtt-client.connections.default.client_id' => Setting::get('mqtt_client_id'), 'mqtt-client.connections.default.auth.username' => Setting::get('mqtt_auth_username'), 'mqtt-client.connections.default.auth.password' => Setting::get('mqtt_auth_password')]);
         $mqtt = MQTT::connection();
 
         // Format: homeassistant/{entity_type}/{entity_id}/{attribute}

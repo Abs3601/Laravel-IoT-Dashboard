@@ -13,7 +13,7 @@ return [
     |
     */
 
-    'name' => env('APP_NAME', 'MQTT Dashboard'),
+    'name' => env('APP_NAME', 'DulMQTT'),
 
     /*
     |--------------------------------------------------------------------------

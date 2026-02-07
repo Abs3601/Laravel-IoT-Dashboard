@@ -7,7 +7,7 @@ use App\Models\Device;
 
 class deviceController extends Controller
 {
-    public function index()
+    public function allDevices()
     {
         $lights = Device::where('entity_type', 'light')
             ->latest('last_seen_at')
@@ -28,7 +28,7 @@ class deviceController extends Controller
                 return $plug;
             });
 
-        return view('index', [
+        return view('all-devices', [
             'lights' => $lights,
             'plugs' => $plugs,
         ]);
@@ -49,4 +49,5 @@ class deviceController extends Controller
             'sensors' => $sensors,
         ]);
     }
+
 }
