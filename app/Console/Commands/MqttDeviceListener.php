@@ -92,9 +92,8 @@ class MqttDeviceListener extends Command
                     'created_at' => now(),
                 ]);
 
-                $this->info("  → State change logged: {$device->current_state}");
+                $this->info("  -> State change logged: {$device->current_state}");
             }
-
         }, 0);
 
         $this->info('Listening for all device updates... (Press Ctrl+C to stop)');
