@@ -16,10 +16,20 @@ class OnboardingComplete
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if (Setting::get("onboarding_completed" === true)) {
+        $onboardingComplete = Setting::get('onboarding_completed');
+        
+
+        if ($request->is('/')) {
+            if ($onboardingComplete) {
+                return redirect()->route('home');
+            }
             return $next($request);
-        }else{
-            return redirect()->route("onboarding");
         }
+        
+        if ($onboardingComplete) {
+            return $next($request);
+        }
+        
+        return redirect()->route('onboarding');
     }
 }
