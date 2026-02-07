@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Setting;
+use Illuminate\Support\Facades\Hash;
 
 class OnboardingController extends Controller
 {
@@ -15,7 +16,7 @@ class OnboardingController extends Controller
         Setting::set('mqtt_host', $request->mqtt_host);
         Setting::set('port', $request->port);
         Setting::set('mqtt_auth_username', $request->mqtt_auth_username);
-        Setting::set('mqtt_auth_password', $request->mqtt_auth_password);
+        Setting::set('mqtt_auth_password', Hash::make($request->mqtt_auth_password));
         Setting::set('mqtt_client_id', $request->mqtt_client_id);
         Setting::set('onboarding_completed', true);
         return redirect()->route('home');
