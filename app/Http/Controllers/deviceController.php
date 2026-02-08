@@ -7,8 +7,9 @@ use App\Models\Device;
 
 class deviceController extends Controller
 {
-    public function allDevices()
+    public function devicesByType()
     {
+
         $lights = Device::where('entity_type', 'light')
             ->latest('last_seen_at')
             ->where('entity_id', 'NOT LIKE', '%browser%')
@@ -31,6 +32,17 @@ class deviceController extends Controller
         return view('all-devices', [
             'lights' => $lights,
             'plugs' => $plugs,
+        ]);
+
+    }
+
+
+    public function allDevices()
+    {
+        $devices = Device::distinct()->get('entity_type');  
+
+        return view('device-overview', [
+            'devices' => $devices,
         ]);
     }
 
