@@ -17,7 +17,7 @@
             <a href="{{ route('home') }}" class="text-xl font-bold text-gray-800">{{ config('app.name') }}</a>
             <div>
                 <a href="{{ route('home') }}" class="text-gray-600 hover:text-gray-800 mx-2">Home</a>
-                <a href="{{ route('home') }}" class="text-gray-600 hover:text-gray-800 mx-2">Devices</a>
+                <a href="{{ route('device.overview') }}" class="text-gray-600 hover:text-gray-800 mx-2">Devices</a>
                 <a href="{{ route('home') }}" class="text-gray-600 hover:text-gray-800 mx-2">Groups</a>
                 <a href="{{ route('home') }}" class="text-gray-600 hover:text-gray-800 mx-2">Automations</a>
             </div>

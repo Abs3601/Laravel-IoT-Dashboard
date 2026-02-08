@@ -17,7 +17,7 @@ new class extends Component
     @foreach($devices as $device)
         <div class="card bg-base-100 h-full hover:bg-base-200 transition-colors cursor-pointer">
             <div class="card-body flex flex-col h-full">
-                <h2 class="card-title">{{ $device->entity_type }}</h2>
+                <h2 class="card-title">    {{ config('devices.type_display_names.'.$device->entity_type, ucfirst(str_replace('_', ' ', $device->entity_type))) }}</h2>
             </div>
         </div>
     @endforeach

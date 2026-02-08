@@ -33,13 +33,17 @@ class deviceController extends Controller
             'lights' => $lights,
             'plugs' => $plugs,
         ]);
-
     }
 
 
     public function allDevices()
     {
-        $devices = Device::distinct()->get('entity_type');  
+
+        $displayableTypes = config('devices.displayable_types');
+
+        $devices = Device::distinct()
+            ->whereIn('entity_type', $displayableTypes)
+            ->get('entity_type');
 
         return view('device-overview', [
             'devices' => $devices,
@@ -61,5 +65,4 @@ class deviceController extends Controller
             'sensors' => $sensors,
         ]);
     }
-
 }
