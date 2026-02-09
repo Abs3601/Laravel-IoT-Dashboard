@@ -50,6 +50,19 @@ class deviceController extends Controller
         ]);
     }
 
+    public function deviceDetails(string $type)
+    {
+        $devices = Device::where('entity_type', $type)
+            ->latest('last_seen_at')
+            ->get();
+
+        return view('device-details', [
+            'devices' => $devices,
+            'type' => $type,
+        ]);
+    }
+
+
     public function showPlug(string $deviceGroup)
     {
         $plug = Device::where('entity_type', 'switch')

@@ -16,5 +16,4 @@ Route::get('/plug/{deviceGroup}', [deviceController::class, 'showPlug'])->name('
 
 Route::get('/device-overview', [deviceController::class, 'allDevices'])->name('device.overview');
 
-
-
+Route::get('/device-details/{type}', [deviceController::class, 'deviceDetails'])->name('device.details');
