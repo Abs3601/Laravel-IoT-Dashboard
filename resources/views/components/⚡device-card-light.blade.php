@@ -3,31 +3,28 @@
 use Livewire\Component;
 
 new class extends Component {
-    public $lights;
+    public $device;
 
-    public function mount($lights)
+    public function mount($device)
     {
-        $this->lights = $lights;
+        $this->device = $device;
     }
 };
 ?>
 
-{{-- wire:poll.500ms --}}
-<div wire:poll.500ms class="grid gap-6 grid-cols-[repeat(auto-fit,minmax(300px,1fr))]">
-    @foreach($lights as $light)
         <div class="card bg-base-100 h-full">
             <div class="card-body flex flex-col h-full">
                 <div class="card-container flex items-start">
                     <div class="left-side">
                         <h1 class="text-2xl font-semibold">
-                            {{ $light->friendly_name ?? str_replace('_', ' ', ucfirst($light->entity_id)) }}
+                            {{ $device->friendly_name ?? str_replace('_', ' ', ucfirst($device->entity_id)) }}
                         </h1>
-                        <p class="text-base font-normal">{{ ucfirst($light->current_state) }}</p>
+                        <p class="text-base font-normal">{{ ucfirst($device->current_state) }}</p>
                         <div class="mt-2">
                             @php
-                                $brightness = $light->attributes['brightness'] ?? null;
+                                $brightness = $device->attributes['brightness'] ?? null;
                                 $brightnessPercent = $brightness !== null ? round(($brightness / 255) * 100) : null;
-                                $deviceColorMode = $light->attributes['rgb_color'] ?? null;
+                                $deviceColorMode = $device->attributes['rgb_color'] ?? null;
                                 $deviceColorRGB = null;
                                 if ($deviceColorMode) {
                                     $r = $deviceColorMode[0];
@@ -49,7 +46,7 @@ new class extends Component {
                                 </div>
                             @endif
                             <p class="text-sm font-light text-gray-500">Last Update:
-                                {{ optional($light->last_seen_at)->diffForHumans() ?? 'never' }}
+                                {{ optional($device->last_seen_at)->diffForHumans() ?? 'never' }}
                             </p>
                         </div>
                     </div>
@@ -59,5 +56,3 @@ new class extends Component {
                 </div>
             </div>
         </div>
-    @endforeach
-</div>

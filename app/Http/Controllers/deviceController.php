@@ -53,6 +53,7 @@ class deviceController extends Controller
     public function deviceDetails(string $type)
     {
         $devices = Device::where('entity_type', $type)
+            ->where('entity_id', 'NOT LIKE', '%browser%')
             ->latest('last_seen_at')
             ->get();
 

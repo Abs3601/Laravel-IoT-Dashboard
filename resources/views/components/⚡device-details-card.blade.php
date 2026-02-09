@@ -15,10 +15,20 @@ new class extends Component
 
 <div class="grid gap-6 grid-cols-[repeat(auto-fit,minmax(300px,1fr))]">
     @foreach($devices as $device)
-        <div class="card bg-base-100 h-full hover:bg-base-200 transition-colors cursor-pointer">
-            <a class="card-body flex flex-col h-full">
-                <h2 class="card-title">    {{ config('devices.type_display_names.'.$device->entity_type, ucfirst(str_replace('_', ' ', $device->entity_type))) }}</h2>
-            </a>
+        @php
+            $componentName = 'device-card-' . $device->entity_type;
+            $voltComponentPath = 'components.⚡' . $componentName;
+        @endphp
+
+        <div class="w-full">
+            @if (view()->exists($voltComponentPath))
+                @livewire($componentName, ['device' => $device], key($device->entity_id))
+            @else
+                @livewire('device-card-generic', ['device' => $device], key($device->entity_id))
+            @endif
         </div>
     @endforeach
 </div>
+
+
+

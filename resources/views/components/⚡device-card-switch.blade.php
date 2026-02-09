@@ -3,23 +3,20 @@
 use Livewire\Component;
 
 new class extends Component {
-    public $plugs;
+    public $device;
 
-    public function mount($plugs)
+    public function mount($device)
     {
-        $this->plugs = $plugs;
+        $this->device = $device;
     }
 };
 ?>
-
-<div wire:poll.500ms class="grid gap-6 grid-cols-[repeat(auto-fit,minmax(300px,1fr))]">
-    @foreach($plugs as $plug)
         @php
-            $friendlyName = $plug->friendly_name ?? str_replace('_', ' ', ucfirst($plug->entity_id));
-            $isOn = strtolower($plug->current_state) === 'on';
+            $friendlyName = $device->friendly_name ?? str_replace('_', ' ', ucfirst($device->entity_id));
+            $isOn = strtolower($device->current_state) === 'on';
         @endphp
 
-        <a href="{{ route('plug.show', $plug->device_group) }}"
+        <a href="{{ route('plug.show', $device->device_group) }}"
             class="card bg-base-100 h-full hover:bg-base-200 transition-colors cursor-pointer">
             <div class="card-body flex flex-col h-full">
                 <div class="card-container flex items-start">
@@ -31,14 +28,12 @@ new class extends Component {
                             </span>
                         </div>
                         <p class="text-sm font-light text-gray-500 mt-2">
-                            Last Update: {{ optional($plug->last_seen_at)->diffForHumans() ?? 'never' }}
+                            Last Update: {{ optional($device->last_seen_at)->diffForHumans() ?? 'never' }}
                         </p>
                     </div>
                     <div class="shrink-0 ml-auto">
-                        <img src="{{ URL::asset('/images/Plug.svg') }}" alt="Plug icon" class="w-15 h-auto">
+                        <img src="{{ URL::asset('/images/plug.svg') }}" alt="device icon" class="w-15 h-auto">
                     </div>
                 </div>
             </div>
         </a>
-    @endforeach
-</div>
