@@ -26,7 +26,7 @@ new class extends Component {
                 </p>
             </div>
             <div class="ml-auto">
-                <img src="{{ URL::asset('/images/Plug.svg') }}" alt="device icon" class="w-15 h-auto">
+                {{-- <img src="{{ URL::asset('/images/Plug.svg') }}" alt="device icon" class="w-15 h-auto"> --}}
             </div>
         </div>
     </div>

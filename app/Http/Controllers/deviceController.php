@@ -63,7 +63,6 @@ class deviceController extends Controller
         ]);
     }
 
-
     public function showPlug(string $deviceGroup)
     {
         $plug = Device::where('entity_type', 'switch')

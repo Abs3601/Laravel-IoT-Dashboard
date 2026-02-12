@@ -1,16 +1,5 @@
-<!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<x-navbar active='Devices'/>
 
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <title>{{ $plug->friendly_name ?? $plug->entity_id }} - Details</title>
-
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
-</head>
-
-<body>
     <div class="container mx-auto p-4 max-w-4xl">
         {{-- Back button --}}
         <a href="{{ url('/') }}" class="btn btn-ghost mb-4">
@@ -77,6 +66,3 @@
             <p class="text-gray-500">No sensor data available.</p>
         @endif
     </div>
-</body>
-
-</html>
