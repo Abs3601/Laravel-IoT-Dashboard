@@ -1,16 +1,3 @@
-<?php
-
-use Livewire\Component;
-
-new class extends Component {
-    public $device;
-
-    public function mount($device)
-    {
-        $this->device = $device;
-    }
-};
-?>
         @php
             $friendlyName = $device->friendly_name ?? str_replace('_', ' ', ucfirst($device->entity_id));
             $isOn = strtolower($device->current_state) === 'on';

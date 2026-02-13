@@ -1,16 +1,3 @@
-<?php
-
-use Livewire\Component;
-
-new class extends Component {
-    public $device;
-
-    public function mount($device)
-    {
-        $this->device = $device;
-    }
-};
-?>
 
 <div>
     <div class="card bg-base-100 h-full">

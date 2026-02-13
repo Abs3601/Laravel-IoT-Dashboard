@@ -17,7 +17,7 @@ class deviceController extends Controller
 
         // Get plug switches with their related sensors
         $plugs = Device::where('entity_type', 'switch')
-            // ->where('entity_id', 'LIKE', '%plug%')
+            ->where('entity_id', 'LIKE', '%plug%')
             ->where('entity_id', 'NOT LIKE', '%auto_off%')
             ->where('entity_id', 'NOT LIKE', '%led%')
             ->get()

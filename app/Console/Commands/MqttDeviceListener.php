@@ -2,9 +2,11 @@
 
 namespace App\Console\Commands;
 
+use App\Events\DeviceUpdated;
 use Illuminate\Console\Command;
 use App\Models\IoTEvent;
 use App\Models\Device;
+use Illuminate\Support\Facades\Cache;
 use PhpMqtt\Client\Facades\MQTT;
 use App\Models\Setting;
 
@@ -35,8 +37,10 @@ class MqttDeviceListener extends Command
         config(['mqtt-client.connections.default.host' => Setting::get('mqtt_host'), 'mqtt-client.connections.default.port' => Setting::get('port'), 'mqtt-client.connections.default.client_id' => Setting::get('mqtt_client_id'), 'mqtt-client.connections.default.auth.username' => Setting::get('mqtt_auth_username'), 'mqtt-client.connections.default.auth.password' => Setting::get('mqtt_auth_password')]);
         $mqtt = MQTT::connection();
 
+
+        $pendingBroadcasts = [];
         // Format: homeassistant/{entity_type}/{entity_id}/{attribute}
-        $mqtt->subscribe('homeassistant/#', function (string $topic, string $message) {
+        $mqtt->subscribe('homeassistant/#', function (string $topic, string $message) use (&$pendingBroadcasts) {
 
             $parts = explode('/', $topic);
 
@@ -84,6 +88,31 @@ class MqttDeviceListener extends Command
                 ['entity_type' => $entityType, 'entity_id' => $entityId],
                 $updateData
             );
+
+            $cacheKey = "broadcast:{$entityType}:{$entityId}";
+            if (!Cache::has($cacheKey)) {
+                DeviceUpdated::dispatch($device);
+                Cache::put($cacheKey, true, now()->addSecond());
+                $this->info("  -> Broadcast (leading): {$entityId}");
+                unset($pendingBroadcasts["{$entityType}:{$entityId}"]);
+            } else {
+                $pendingBroadcasts["{$entityType}:{$entityId}"] = [
+                    'device' => $device,
+                    'queued_at' => microtime(true),
+                ];
+            }
+
+            foreach ($pendingBroadcasts as $key => $pending) {
+                $elapsed = microtime(true) - $pending['queued_at'];
+                if ($elapsed >= 1.0) {
+                    $freshDevice = Device::find($pending['device']->id);
+                    if ($freshDevice) {
+                        DeviceUpdated::dispatch($freshDevice);
+                        $this->info("  -> Broadcast (trailing): {$freshDevice->entity_id}");
+                    }
+                    unset($pendingBroadcasts[$key]);
+                }
+            }
 
             if ($attribute === 'state') {
                 IoTEvent::create([
