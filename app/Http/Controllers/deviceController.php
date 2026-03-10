@@ -7,53 +7,25 @@ use App\Models\Device;
 
 class deviceController extends Controller
 {
-    public function devicesByType()
-    {
-
-        $lights = Device::where('entity_type', 'light')
-            ->latest('last_seen_at')
-            ->where('entity_id', 'NOT LIKE', '%browser%')
-            ->get();
-
-        // Get plug switches with their related sensors
-        $plugs = Device::where('entity_type', 'switch')
-            ->where('entity_id', 'LIKE', '%plug%')
-            ->where('entity_id', 'NOT LIKE', '%auto_off%')
-            ->where('entity_id', 'NOT LIKE', '%led%')
-            ->get()
-            ->map(function ($plug) {
-                // Find all related sensors by device_group
-                $plug->sensors = Device::where('device_group', $plug->device_group)
-                    ->where('entity_type', 'sensor')
-                    ->get();
-                return $plug;
-            });
-
-        return view('all-devices', [
-            'lights' => $lights,
-            'plugs' => $plugs,
-        ]);
-    }
-
-
     public function allDevices()
     {
-
-        $displayableTypes = config('devices.displayable_types');
-
-        $devices = Device::distinct()
-            ->whereIn('entity_type', $displayableTypes)
-            ->get('entity_type');
+        $devices = Device::select('entity_type')
+            ->distinct()
+            ->whereNotNull('current_state')
+            ->get();
 
         return view('device-overview', [
             'devices' => $devices,
         ]);
     }
 
+    /**
+     * Show all devices of a given type.
+     */
     public function deviceDetails(string $type)
     {
         $devices = Device::where('entity_type', $type)
-            ->where('entity_id', 'NOT LIKE', '%browser%')
+            ->whereNotNull('current_state')
             ->latest('last_seen_at')
             ->get();
 
@@ -63,19 +35,26 @@ class deviceController extends Controller
         ]);
     }
 
-    public function showPlug(string $deviceGroup)
+    /**
+     * Show a device and all its related sensors/entities.
+     */
+    public function showDeviceGroup(string $deviceGroup)
     {
-        $plug = Device::where('entity_type', 'switch')
-            ->where('device_group', $deviceGroup)
-            ->firstOrFail();
+        $device = Device::where('device_group', $deviceGroup)
+            ->where('entity_type', '!=', 'sensor')
+            ->first();
 
-        $sensors = Device::where('device_group', $deviceGroup)
-            ->where('entity_type', 'sensor')
+        if (!$device) {
+            $device = Device::where('device_group', $deviceGroup)->firstOrFail();
+        }
+
+        $relatedDevices = Device::where('device_group', $deviceGroup)
+            ->where('id', '!=', $device->id)
             ->get();
 
-        return view('plug-detail', [
-            'plug' => $plug,
-            'sensors' => $sensors,
+        return view('device-group-detail', [
+            'device' => $device,
+            'relatedDevices' => $relatedDevices,
         ]);
     }
 }
