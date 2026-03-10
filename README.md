@@ -34,7 +34,7 @@ The listener can parse topics from:
 1. **Clone the repo**
 
    ```bash
-   git clone <your-repo-url>
+   git clone <https://github.com/Abs3601/Laravel-IoT-Dashboard.git>
    cd Dissertation
    ```
 
