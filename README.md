@@ -35,7 +35,7 @@ The listener can parse topics from:
 
    ```bash
    git clone https://github.com/Abs3601/Laravel-IoT-Dashboard.git
-   cd Dissertation
+   cd Laravel-IoT-Dashboard
    ```
 
 2. **Install PHP dependencies**
