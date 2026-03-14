@@ -24,7 +24,7 @@ class MqttDeviceListener extends Command
      *
      * @var string
      */
-    protected $description = 'Listen for MQTT messages from all Home Assistant device types';
+    protected $description = 'Listen for MQTT messages and dynamically discover all device types';
 
     /**
      * Execute the console command.
@@ -39,22 +39,33 @@ class MqttDeviceListener extends Command
 
 
         $pendingBroadcasts = [];
-        // Format: homeassistant/{entity_type}/{entity_id}/{attribute}
-        $mqtt->subscribe('homeassistant/#', function (string $topic, string $message) use (&$pendingBroadcasts) {
+
+        // Subscribe to all topics — works with any MQTT broker structure
+        // Common patterns:
+        //   Home Assistant:  homeassistant/{entity_type}/{entity_id}/{attribute}
+        //   Zigbee2MQTT:     zigbee2mqtt/{device_name}
+        //   Tasmota:         tele/{device_name}/STATE, cmnd/{device_name}/POWER
+        //   ESPHome:         esphome/{device_name}/{sensor}/state
+        //   Generic:         {prefix}/{type}/{id}/{attribute}
+        $mqtt->subscribe('#', function (string $topic, string $message) use (&$pendingBroadcasts) {
 
             $parts = explode('/', $topic);
 
-            if (count($parts) < 4) {
+            // Need at least a prefix and one identifier to be useful
+            if (count($parts) < 2) {
                 return;
             }
 
-            $entityType = $parts[1];
-            $entityId = $parts[2];
-            $attribute = $parts[3];
+            // Parse topic structure dynamically
+            $parsed = $this->parseTopic($parts);
 
-            if ($entityType === 'status' || $attribute === 'config') {
+            if ($parsed === null) {
                 return;
             }
+
+            $entityType = $parsed['entity_type'];
+            $entityId = $parsed['entity_id'];
+            $attribute = $parsed['attribute'];
 
             $this->info("Received: {$entityType}/{$entityId}/{$attribute} = " . substr($message, 0, 50));
 
@@ -78,7 +89,19 @@ class MqttDeviceListener extends Command
                     : (string) $parsedValue;
             }
 
-            if ($attribute === 'friendly_name') {
+            // For JSON payloads (Zigbee2MQTT, Tasmota), extract state from the payload
+            if ($attribute === 'payload' && is_array($parsedValue)) {
+                if (isset($parsedValue['state'])) {
+                    $updateData['current_state'] = strtolower(trim((string) $parsedValue['state']));
+                }
+                // Merge all JSON keys as individual attributes
+                $newAttributes = array_merge($existingAttributes, $parsedValue);
+                $updateData['attributes'] = $newAttributes;
+            }
+
+            if (isset($parsedValue['friendly_name'])) {
+                $updateData['friendly_name'] = $parsedValue['friendly_name'];
+            } elseif ($attribute === 'friendly_name') {
                 $updateData['friendly_name'] = is_string($parsedValue)
                     ? $parsedValue
                     : null;
@@ -114,7 +137,7 @@ class MqttDeviceListener extends Command
                 }
             }
 
-            if ($attribute === 'state') {
+            if (($updateData['current_state'] ?? null) !== null) {
                 IoTEvent::create([
                     'entity_type' => $entityType,
                     'entity_id' => $entityId,
@@ -129,6 +152,136 @@ class MqttDeviceListener extends Command
 
         $this->info('Listening for all device updates... (Press Ctrl+C to stop)');
         $mqtt->loop(true);
+    }
+
+    /**
+     * Dynamically parse an MQTT topic into entity_type, entity_id, and attribute.
+     *
+     * @return array{entity_type: string, entity_id: string, attribute: string}|null
+     */
+    private function parseTopic(array $parts): ?array
+    {
+        $prefix = strtolower($parts[0]);
+
+        // Home Assistant discovery format
+        // homeassistant/{entity_type}/{entity_id}/{attribute}
+        if ($prefix === 'homeassistant') {
+            if (count($parts) < 4) {
+                return null;
+            }
+            // Skip status and config topics
+            if ($parts[1] === 'status' || $parts[3] === 'config') {
+                return null;
+            }
+            return [
+                'entity_type' => $parts[1],
+                'entity_id'   => $parts[2],
+                'attribute'   => $parts[3],
+            ];
+        }
+
+        // Zigbee2MQTT format
+        // zigbee2mqtt/{device_name}          JSON payload with state + attributes
+        // zigbee2mqtt/{device_name}/set      command (ignore)
+        // zigbee2mqtt/{device_name}/get      request (ignore)
+        // zigbee2mqtt/bridge/{...}           bridge info (ignore)
+        if ($prefix === 'zigbee2mqtt') {
+            if (count($parts) < 2 || $parts[1] === 'bridge') {
+                return null;
+            }
+            // Ignore /set and /get command topics
+            if (count($parts) >= 3 && in_array(strtolower($parts[count($parts) - 1]), ['set', 'get'])) {
+                return null;
+            }
+            return [
+                'entity_type' => 'zigbee',
+                'entity_id'   => $parts[1],
+                'attribute'   => 'payload',
+            ];
+        }
+
+        // Tasmota format
+        // tele/{device}/STATE|SENSOR|LWT|INFO...
+        // stat/{device}/RESULT|POWER|...
+        // cmnd/{device}/...  commands (ignore)
+        if (in_array($prefix, ['tele', 'stat', 'cmnd'])) {
+            if (count($parts) < 3) {
+                return null;
+            }
+            if ($prefix === 'cmnd') {
+                return null; // ignore outgoing commands
+            }
+            $attr = strtolower($parts[2]);
+            // LWT (Last Will and Testament) is availability, not a device update
+            if ($attr === 'lwt') {
+                return null;
+            }
+            return [
+                'entity_type' => 'tasmota',
+                'entity_id'   => $parts[1],
+                'attribute'   => $attr,
+            ];
+        }
+
+        // ESPHome format
+        // esphome/{device}/{sensor_type}/state
+        if ($prefix === 'esphome') {
+            if (count($parts) < 3) {
+                return null;
+            }
+            $attribute = count($parts) >= 4 ? $parts[3] : 'payload';
+            return [
+                'entity_type' => 'esphome',
+                'entity_id'   => $parts[1] . '_' . $parts[2],
+                'attribute'   => $attribute,
+            ];
+        }
+
+        // Shelly format
+        // shellies/{device_id}/{component}/{index}/{property}
+        // shellyplus-{id}/status/{component}:{index}
+        if ($prefix === 'shellies' || str_starts_with($prefix, 'shelly')) {
+            if (count($parts) < 3) {
+                return null;
+            }
+            return [
+                'entity_type' => 'shelly',
+                'entity_id'   => $parts[1] ?? $parts[0],
+                'attribute'   => implode('_', array_slice($parts, 2)),
+            ];
+        }
+
+        // Generic fallback: 3+ segments
+        // {prefix}/{type_or_id}/{id_or_attr}/{...}
+        if (count($parts) >= 4) {
+            return [
+                'entity_type' => $parts[1],
+                'entity_id'   => $parts[2],
+                'attribute'   => implode('_', array_slice($parts, 3)),
+            ];
+        }
+
+        // Generic fallback: 3 segments
+        // {prefix}/{id}/{attribute}
+        if (count($parts) === 3) {
+            return [
+                'entity_type' => $prefix,
+                'entity_id'   => $parts[1],
+                'attribute'   => $parts[2],
+            ];
+        }
+
+        // Generic fallback: 2 segments
+        // {prefix}/{id} expects JSON payload
+        if (count($parts) === 2) {
+            return [
+                'entity_type' => $prefix,
+                'entity_id'   => $parts[1],
+                'attribute'   => 'payload',
+            ];
+        }
+
+        return null;
     }
 
     /**
@@ -168,37 +321,51 @@ class MqttDeviceListener extends Command
     }
 
     /**
-     * Extract the base device group from an entity ID.
-     * Removes common sensor suffixes to group related entities together.
+     * Extract device group using Longest Common Prefix (LCP) algorithm.
      */
     private function extractDeviceGroup(string $entityId): string
     {
-        $suffixes = [
-            '_voltage',
-            '_current',
-            '_power',
-            '_signal_level',
-            '_current_consumption',
-            '_today_s_consumption',
-            '_this_month_s_consumption',
-            '_summation_delivered',
-            '_auto_off_at',
-            '_auto_off_enabled',
-            '_led',
-            '_cloud_connection',
-            '_overheated',
-            '_firmware',
-            '_turn_off_in',
-            '_start_up_behaviour',
-            '_identify',
-        ];
+        $existingIds = Device::pluck('entity_id')->toArray();
 
-        foreach ($suffixes as $suffix) {
-            if (str_ends_with($entityId, $suffix)) {
-                return str_replace($suffix, '', $entityId);
+        $bestGroup = $entityId;
+        $bestPrefixLen = 0;
+
+        foreach ($existingIds as $existingId) {
+            if ($existingId === $entityId) {
+                continue;
+            }
+
+            $prefix = $this->longestCommonPrefix($entityId, $existingId);
+            $lastUnderscore = strrpos($prefix, '_');
+            if ($lastUnderscore !== false) {
+                $prefix = substr($prefix, 0, $lastUnderscore);
+            }
+
+            if (strlen($prefix) > $bestPrefixLen && strlen($prefix) >= 5) {
+                $bestPrefixLen = strlen($prefix);
+                $bestGroup = $prefix;
             }
         }
 
-        return $entityId;
+        if ($bestGroup !== $entityId) {
+            Device::where('entity_id', 'LIKE', $bestGroup . '_%')
+                ->where('device_group', '!=', $bestGroup)
+                ->update(['device_group' => $bestGroup]);
+        }
+
+        return $bestGroup;
+    }
+
+    /**
+     * Compute the longest common prefix between two strings.
+     */
+    private function longestCommonPrefix(string $a, string $b): string
+    {
+        $len = min(strlen($a), strlen($b));
+        $i = 0;
+        while ($i < $len && $a[$i] === $b[$i]) {
+            $i++;
+        }
+        return substr($a, 0, $i);
     }
 }

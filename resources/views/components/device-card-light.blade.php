@@ -1,4 +1,5 @@
-        <div class="card bg-base-100 h-full">
+        <a href="{{ route('device.group', $device->device_group) }}"
+            class="card bg-base-100 h-full hover:bg-base-200 transition-colors cursor-pointer">
             <div class="card-body flex flex-col h-full">
                 <div class="card-container flex items-start">
                     <div class="left-side">
@@ -41,4 +42,4 @@
                     </div>
                 </div>
             </div>
-        </div>
+        </a>
