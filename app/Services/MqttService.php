@@ -42,9 +42,33 @@ class MqttService
     }
 
     /**
+     * Send a brightness command to a device.
+     */
+    public function sendBrightness(Device $device, int $brightness): void
+    {
+        $topic = $this->getCommandTopic($device, 'set_brightness');
+        if (!$topic) return;
+
+        try {
+            config([
+                'mqtt-client.connections.default.host' => Setting::get('mqtt_host'), 
+                'mqtt-client.connections.default.port' => Setting::get('port'), 
+                'mqtt-client.connections.default.client_id' => Setting::get('mqtt_client_id') . '_publisher', 
+                'mqtt-client.connections.default.auth.username' => Setting::get('mqtt_auth_username'), 
+                'mqtt-client.connections.default.auth.password' => Setting::get('mqtt_auth_password')
+            ]);
+            $mqtt = MQTT::connection();
+            $mqtt->publish($topic, (string) $brightness, 0);
+            Log::info("Published Brightness -> Topic: {$topic}, Payload: {$brightness}");
+        } catch (\Exception $e) {
+            Log::error("Failed to publish brightness: " . $e->getMessage());
+        }
+    }
+
+    /**
      * Determine the correct command topic based on device type.
      */
-    protected function getCommandTopic(Device $device): ?string
+    protected function getCommandTopic(Device $device, string $suffix = 'set'): ?string
     {
         // Home Assistant Discovery (prioritize attribute if exists)
         if (!empty($device->attributes['command_topic'])) {
@@ -58,7 +82,7 @@ class MqttService
         $haDomains = ['light', 'switch', 'button', 'fan', 'lock', 'cover', 'climate', 'siren', 'number', 'input_boolean'];
         if (in_array($type, $haDomains)) {
             // HA MQTT Discovery default fallback pattern: (best guess)
-            return "homeassistant/{$type}/{$id}/set";
+            return "homeassistant/{$type}/{$id}/{$suffix}";
         }
 
         return match ($type) {

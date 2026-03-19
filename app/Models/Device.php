@@ -32,4 +32,12 @@ class Device extends Model
     {
         app(\App\Services\MqttService::class)->sendCommand($this, $state);
     }
+
+    /**
+     * Send an MQTT brightness command to this device.
+     */
+    public function setBrightness(int $brightness): void
+    {
+        app(\App\Services\MqttService::class)->sendBrightness($this, $brightness);
+    }
 }

@@ -59,6 +59,28 @@ new class extends Component
             });
         }
     }
+
+    public function setBrightness($deviceId, $brightnessPercent)
+    {
+        $device = Device::find($deviceId);
+        if ($device) {
+            $brightness255 = (int) round(($brightnessPercent / 100) * 255);
+            $device->setBrightness($brightness255);
+
+            // Optimistic update
+            $this->devices->transform(function ($d) use ($deviceId, $brightness255) {
+                if ($d->id == $deviceId) {
+                    $attrs = $d->attributes;
+                    $attrs['brightness'] = $brightness255;
+                    if ($brightness255 > 0) {
+                        $d->current_state = 'on';
+                    }
+                    $d->attributes = $attrs;
+                }
+                return $d;
+            });
+        }
+    }
 };
 ?>
 

@@ -42,13 +42,20 @@ class deviceController extends Controller
      */
     public function showDeviceGroup(string $deviceGroup)
     {
-        $device = Device::where('device_group', $deviceGroup)
-            ->where('entity_type', '!=', 'sensor')
-            ->first();
+        $priorities = "CASE 
+            WHEN entity_type = 'light' THEN 1
+            WHEN entity_type = 'switch' THEN 2
+            WHEN entity_type = 'climate' THEN 3
+            WHEN entity_type = 'fan' THEN 4
+            WHEN entity_type = 'media_player' THEN 5
+            WHEN entity_type = 'cover' THEN 6
+            WHEN entity_type = 'lock' THEN 7
+            WHEN entity_type = 'siren' THEN 8
+            ELSE 99 END";
 
-        if (!$device) {
-            $device = Device::where('device_group', $deviceGroup)->firstOrFail();
-        }
+        $device = Device::where('device_group', $deviceGroup)
+            ->orderByRaw($priorities)
+            ->firstOrFail();
 
         $relatedDevices = Device::where('device_group', $deviceGroup)
             ->where('id', '!=', $device->id)

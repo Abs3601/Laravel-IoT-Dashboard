@@ -85,7 +85,7 @@ class MqttDeviceListener extends Command
             $newAttributes = array_merge($existingAttributes, [$attribute => $parsedValue]);
 
             // Only run the heavy device group extraction if the device is brand new
-            $deviceGroup = $existingDevice?->device_group ?: $this->extractDeviceGroup($entityId);
+            $deviceGroup = $existingDevice?->device_group ?: $this->extractDeviceGroup($entityId, $entityType);
 
             $updateData = [
                 'attributes' => $newAttributes,
@@ -362,51 +362,28 @@ class MqttDeviceListener extends Command
     }
 
     /**
-     * Extract device group using Longest Common Prefix (LCP) algorithm.
+     * Accurately determine the device group based on Home Assistant parent/child naming conventions.
      */
-    private function extractDeviceGroup(string $entityId): string
+    private function extractDeviceGroup(string $entityId, string $entityType): string
     {
-        $existingIds = Device::pluck('entity_id')->toArray();
-
-        $bestGroup = $entityId;
-        $bestPrefixLen = 0;
-
-        foreach ($existingIds as $existingId) {
-            if ($existingId === $entityId) {
-                continue;
-            }
-
-            $prefix = $this->longestCommonPrefix($entityId, $existingId);
-            $lastUnderscore = strrpos($prefix, '_');
-            if ($lastUnderscore !== false) {
-                $prefix = substr($prefix, 0, $lastUnderscore);
-            }
-
-            if (strlen($prefix) > $bestPrefixLen && strlen($prefix) >= 5) {
-                $bestPrefixLen = strlen($prefix);
-                $bestGroup = $prefix;
-            }
+        $primaryTypes = ['light', 'switch', 'fan', 'climate', 'media_player', 'cover', 'lock', 'siren', 'button', 'number', 'input_boolean', 'input_select'];
+        
+        if (in_array($entityType, $primaryTypes)) {
+            Device::where('entity_id', 'LIKE', $entityId . '\_%')
+                ->where('device_group', '!=', $entityId)
+                ->update(['device_group' => $entityId]);
+                
+            return $entityId;
         }
 
-        if ($bestGroup !== $entityId) {
-            Device::where('entity_id', 'LIKE', $bestGroup . '_%')
-                ->where('device_group', '!=', $bestGroup)
-                ->update(['device_group' => $bestGroup]);
-        }
+        $parentDevice = Device::whereIn('entity_type', $primaryTypes)
+            ->whereRaw("? LIKE CONCAT(entity_id, '\\\_%')", [$entityId])
+            ->orderByRaw('LENGTH(entity_id) DESC')
+            ->first();
 
-        return $bestGroup;
-    }
-
-    /**
-     * Compute the longest common prefix between two strings.
-     */
-    private function longestCommonPrefix(string $a, string $b): string
-    {
-        $len = min(strlen($a), strlen($b));
-        $i = 0;
-        while ($i < $len && $a[$i] === $b[$i]) {
-            $i++;
+        if ($parentDevice) {
+            return $parentDevice->entity_id;
         }
-        return substr($a, 0, $i);
+        return $entityId;
     }
 }

@@ -1,5 +1,5 @@
-        <a href="{{ route('device.group', $device->device_group) }}"
-            class="card bg-base-100 h-full hover:bg-base-200 transition-colors cursor-pointer">
+        <div class="card bg-base-100 h-full hover:bg-base-200 transition-colors relative isolate">
+            <a href="{{ route('device.group', $device->device_group) }}" class="absolute inset-0 z-0"></a>
             <div class="card-body flex flex-col h-full">
                 <div class="card-container flex items-start">
                     <div class="left-side">
@@ -30,10 +30,11 @@
                                 }
                             @endphp
                             @if($brightnessPercent !== null)
-                                <div class="relative mb-2">
-                                    <input type="range" min="0" max="100" value="{{ $brightnessPercent }}"
+                                <div class="relative mb-2 z-10">
+                                    <input type="range" wire:key="slider-{{ $device->id }}" min="0" max="100" value="{{ $brightnessPercent }}"
                                         class="brightness-slider w-full h-8 rounded appearance-none cursor-pointer"
                                         style="background: linear-gradient(90deg, {{ $deviceColorRGB ?? '#FFBF00' }} {{ $brightnessPercent }}%, #e5e7eb {{ $brightnessPercent }}%);"
+                                        wire:change="setBrightness({{ $device->id }}, $event.target.value)"
                                         oninput="this.style.background = 'linear-gradient(90deg, {{ $deviceColorRGB ?? '#FFBF00' }} '+this.value+'%, #e5e7eb '+this.value+'%)'; this.nextElementSibling.textContent = this.value + '%';" />
                                     <span
                                         class="absolute top-0 left-0 right-0 h-8 flex items-center justify-center text-sm text-white pointer-events-none text-shadow-md">
@@ -51,4 +52,4 @@
                     </div>
                 </div>
             </div>
-        </a>
+        </div>
