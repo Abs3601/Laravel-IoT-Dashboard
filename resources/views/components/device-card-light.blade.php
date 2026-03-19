@@ -6,8 +6,17 @@
                         <h1 class="text-2xl font-semibold">
                             {{ $device->friendly_name ?? str_replace('_', ' ', ucfirst($device->entity_id)) }}
                         </h1>
-                        <p class="text-base font-normal">{{ ucfirst($device->current_state) }}</p>
-                        <div class="mt-2">
+                        <div class="flex items-center gap-4 mb-2 mt-1 relative z-10">
+                            <p class="text-base font-normal badge {{ strtolower($device->current_state) === 'on' ? 'badge-success' : 'badge-neutral' }} mb-0">{{ ucfirst($device->current_state) }}</p>
+                            
+                            <label class="cursor-pointer flex items-center gap-2">
+                                <span class="text-sm font-medium">Power</span>
+                                <input type="checkbox" class="toggle toggle-primary" 
+                                    wire:click.prevent.stop="toggleDevice({{ $device->id }})" 
+                                    {{ strtolower($device->current_state) === 'on' ? 'checked' : '' }} />
+                            </label>
+                        </div>
+                        <div class="mt-2 relative z-10">
                             @php
                                 $brightness = $device->attributes['brightness'] ?? null;
                                 $brightnessPercent = $brightness !== null ? round(($brightness / 255) * 100) : null;

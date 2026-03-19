@@ -107,6 +107,23 @@ class MqttDeviceListener extends Command
                     : null;
             }
 
+            // Extract config details for Home Assistant MQTT Discovery
+            if ($attribute === 'config' && is_array($parsedValue)) {
+                if (isset($parsedValue['command_topic'])) {
+                    $newAttributes['command_topic'] = $parsedValue['command_topic'];
+                }
+                if (isset($parsedValue['payload_on'])) {
+                    $newAttributes['payload_on'] = $parsedValue['payload_on'];
+                }
+                if (isset($parsedValue['payload_off'])) {
+                    $newAttributes['payload_off'] = $parsedValue['payload_off'];
+                }
+                if (isset($parsedValue['name'])) {
+                    $updateData['friendly_name'] = $parsedValue['name'];
+                }
+                $updateData['attributes'] = $newAttributes;
+            }
+
             $device = Device::updateOrCreate(
                 ['entity_type' => $entityType, 'entity_id' => $entityId],
                 $updateData
@@ -169,8 +186,8 @@ class MqttDeviceListener extends Command
             if (count($parts) < 4) {
                 return null;
             }
-            // Skip status and config topics
-            if ($parts[1] === 'status' || $parts[3] === 'config') {
+            // Skip status topics but ALLOW config topics now
+            if ($parts[1] === 'status') {
                 return null;
             }
             return [

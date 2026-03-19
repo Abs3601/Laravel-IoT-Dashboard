@@ -41,6 +41,23 @@ new class extends Component
                 ->get();
         }
     }
+
+    public function toggleDevice($deviceId)
+    {
+        $device = Device::find($deviceId);
+        if ($device) {
+            $newState = strtolower($device->current_state) === 'on' ? 'OFF' : 'ON';
+            $device->sendCommand($newState);
+
+            // Optimistic UI update
+            $this->devices->transform(function ($d) use ($deviceId, $newState) {
+                if ($d->id === $deviceId) {
+                    $d->current_state = strtolower($newState);
+                }
+                return $d;
+            });
+        }
+    }
 };
 ?>
 
@@ -51,7 +68,7 @@ new class extends Component
             $ComponentPath = 'components.' . $componentName;
         @endphp
 
-        <div class="w-full">
+        <div class="w-full" wire:key="device-card-{{ $device->id }}">
             @if (view()->exists($ComponentPath))
                 @include($ComponentPath, ['device' => $device])
             @else

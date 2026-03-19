@@ -22,4 +22,12 @@ class Device extends Model
         'last_seen_at' => 'datetime',
         'attributes' => 'array',
     ];
+
+    /**
+     * Send an MQTT command to this device.
+     */
+    public function sendCommand(mixed $state): void
+    {
+        app(\App\Services\MqttService::class)->sendCommand($this, $state);
+    }
 }

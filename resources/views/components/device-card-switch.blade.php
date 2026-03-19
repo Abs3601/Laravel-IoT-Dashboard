@@ -9,10 +9,17 @@
                 <div class="card-container flex items-start">
                     <div class="left-side flex-1">
                         <h1 class="text-2xl font-semibold">{{ $friendlyName }}</h1>
-                        <div class="flex items-center gap-2 mt-2">
-                            <span class="badge {{ $isOn ? 'badge-success' : 'badge-neutral' }} badge-lg">
+                        <div class="flex items-center gap-4 mt-4 relative z-10">
+                            <span class="badge {{ $isOn ? 'badge-success' : 'badge-neutral' }} badge-lg whitespace-nowrap">
                                 {{ $isOn ? 'On' : 'Off' }}
                             </span>
+                            
+                            <label class="cursor-pointer flex items-center gap-2">
+                                <span class="text-sm font-medium">Power</span>
+                                <input type="checkbox" class="toggle toggle-primary" 
+                                    wire:click.prevent.stop="toggleDevice({{ $device->id }})" 
+                                    {{ $isOn ? 'checked' : '' }} />
+                            </label>
                         </div>
                         <p class="text-sm font-light text-gray-500 mt-2">
                             Last Update: {{ optional($device->last_seen_at)->diffForHumans() ?? 'never' }}
