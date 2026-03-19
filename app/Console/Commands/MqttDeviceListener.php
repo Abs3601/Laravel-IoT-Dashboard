@@ -34,7 +34,14 @@ class MqttDeviceListener extends Command
         $this->info('Connecting to MQTT broker...');
 
         /** @var \PhpMqtt\Client\Contracts\MqttClient $mqtt */
-        config(['mqtt-client.connections.default.host' => Setting::get('mqtt_host'), 'mqtt-client.connections.default.port' => Setting::get('port'), 'mqtt-client.connections.default.client_id' => Setting::get('mqtt_client_id'), 'mqtt-client.connections.default.auth.username' => Setting::get('mqtt_auth_username'), 'mqtt-client.connections.default.auth.password' => Setting::get('mqtt_auth_password')]);
+        config([
+            'mqtt-client.connections.default.host' => Setting::get('mqtt_host'), 
+            'mqtt-client.connections.default.port' => Setting::get('port'), 
+            'mqtt-client.connections.default.client_id' => Setting::get('mqtt_client_id'), 
+            'mqtt-client.connections.default.auth.username' => Setting::get('mqtt_auth_username'), 
+            'mqtt-client.connections.default.auth.password' => Setting::get('mqtt_auth_password'),
+            'mqtt-client.connections.default.connection_settings.keep_alive_interval' => 600, // Extending this timeout to 10 mins cos itll crash on low end hardware otherwise
+        ]);
         $mqtt = MQTT::connection();
 
 
@@ -77,10 +84,13 @@ class MqttDeviceListener extends Command
             $parsedValue = $this->parseValue($message);
             $newAttributes = array_merge($existingAttributes, [$attribute => $parsedValue]);
 
+            // Only run the heavy device group extraction if the device is brand new
+            $deviceGroup = $existingDevice?->device_group ?: $this->extractDeviceGroup($entityId);
+
             $updateData = [
                 'attributes' => $newAttributes,
                 'last_seen_at' => now(),
-                'device_group' => $this->extractDeviceGroup($entityId),
+                'device_group' => $deviceGroup,
             ];
 
             if ($attribute === 'state') {
@@ -180,16 +190,30 @@ class MqttDeviceListener extends Command
     {
         $prefix = strtolower($parts[0]);
 
+        // Ignore plex!!!! AHHHHHH!!!
+        if (str_contains(strtolower(implode('/', $parts)), 'plex')) {
+            return null;
+        }
+
         // Home Assistant discovery format
         // homeassistant/{entity_type}/{entity_id}/{attribute}
         if ($prefix === 'homeassistant') {
             if (count($parts) < 4) {
                 return null;
             }
-            // Skip status topics but ALLOW config topics now
+            // Skip status topics
             if ($parts[1] === 'status') {
                 return null;
             }
+
+            // Filter out HA topics we dont want
+            $allowedDomains = [
+                'light', 'switch', 'sensor', 'binary_sensor', 'button', 'fan', 
+                'cover', 'climate', 'lock', 'alarm_control_panel', 'number', 'select', 'siren'
+            ];
+
+            $updateData['is_hidden'] = !in_array($parts[1], $allowedDomains);
+
             return [
                 'entity_type' => $parts[1],
                 'entity_id'   => $parts[2],

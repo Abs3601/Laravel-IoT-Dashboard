@@ -12,6 +12,7 @@ class deviceController extends Controller
         $devices = Device::select('entity_type')
             ->distinct()
             ->whereNotNull('current_state')
+            ->where('is_hidden', false)
             ->get();
 
         return view('device-overview', [
@@ -26,6 +27,7 @@ class deviceController extends Controller
     {
         $devices = Device::where('entity_type', $type)
             ->whereNotNull('current_state')
+            ->where('is_hidden', false)
             ->latest('last_seen_at')
             ->get();
 

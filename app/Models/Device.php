@@ -16,11 +16,13 @@ class Device extends Model
         'current_state',
         'attributes',
         'last_seen_at',
+        'is_hidden',
     ];
 
     protected $casts = [
         'last_seen_at' => 'datetime',
         'attributes' => 'array',
+        'is_hidden' => 'boolean',
     ];
 
     /**

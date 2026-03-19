@@ -16,7 +16,7 @@ new class extends Component
 
     public function getListeners(): array
     {
-        $listeners = [];
+        $listeners = ['device-restored' => 'refreshDevices'];
         foreach ($this->devices as $device) {
             $listeners["echo:devices.{$device->device_group},DeviceUpdated"] = 'refreshDevices';
         }
@@ -37,6 +37,7 @@ new class extends Component
         } else {
             $this->devices = Device::where('entity_type', $this->type)
                 ->where('entity_id', 'NOT LIKE', '%browser%')
+                ->where('is_hidden', false)
                 ->latest('last_seen_at')
                 ->get();
         }

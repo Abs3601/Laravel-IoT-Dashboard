@@ -36,8 +36,6 @@ class MqttService
             $mqtt->publish($topic, $payload, 0);
             Log::info("Published MQTT Command -> Topic: {$topic}, Payload: {$payload}");
             
-            // Optionally, disconnect if the connection was fresh
-            // $mqtt->disconnect();
         } catch (\Exception $e) {
             Log::error("Failed to publish MQTT message: " . $e->getMessage());
         }
@@ -48,7 +46,7 @@ class MqttService
      */
     protected function getCommandTopic(Device $device): ?string
     {
-        // 1. Home Assistant Discovery (prioritize attribute if exists)
+        // Home Assistant Discovery (prioritize attribute if exists)
         if (!empty($device->attributes['command_topic'])) {
             return $device->attributes['command_topic'];
         }
@@ -60,8 +58,6 @@ class MqttService
         $haDomains = ['light', 'switch', 'button', 'fan', 'lock', 'cover', 'climate', 'siren', 'number', 'input_boolean'];
         if (in_array($type, $haDomains)) {
             // HA MQTT Discovery default fallback pattern: (best guess)
-            // But actually Home Assistant uses the exact topic that the device is listening on.
-            // If it's a generic MQTT statestream, it might be homeassistant/{$type}/{$id}/set
             return "homeassistant/{$type}/{$id}/set";
         }
 
@@ -79,7 +75,7 @@ class MqttService
      */
     protected function getCommandPayload(Device $device, mixed $state): string
     {
-        // 1. Respect HA Discovery custom payloads
+        // HA Discovery custom payloads
         $isOn = strtolower((string) $state) === 'on';
         if ($isOn && isset($device->attributes['payload_on'])) {
             return (string) $device->attributes['payload_on'];
