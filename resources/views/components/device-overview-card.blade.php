@@ -15,9 +15,9 @@ new class extends Component
 
 <div class="grid gap-6 grid-cols-[repeat(auto-fit,minmax(300px,1fr))]">
     @foreach($devices as $device)
-        <div class="card bg-base-100 h-full hover:bg-base-200 transition-colors cursor-pointer">
+        <div class="card bg-card-light dark:bg-card-dark h-full hover:brightness-110 transition-colors cursor-pointer border border-transparent dark:border-gray-700">
             <a href="{{ route('device.details', ['type' => $device->entity_type]) }}" class="card-body flex flex-col h-full">
-                <h2 class="card-title">{{ ucfirst(str_replace('_', ' ', $device->entity_type)) }}</h2>
+                <h2 class="card-title text-white">{{ ucfirst(str_replace('_', ' ', $device->entity_type)) }}</h2>
             </a>
         </div>
     @endforeach

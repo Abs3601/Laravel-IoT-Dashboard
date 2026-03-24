@@ -5,8 +5,8 @@
     {{-- Hero / Welcome Section --}}
     <div class="py-12 px-6">
         <div class="text-center mx-auto max-w-lg">
-            <h1 class="text-4xl font-bold">{{ config('app.name') }}</h1>
-            <p class="py-4 text-base-content/70">
+            <h1 class="text-4xl font-bold dark:text-white">{{ config('app.name') }}</h1>
+            <p class="py-4 text-base-content/70 dark:text-white">
                 Your smart home at a glance. Monitor devices, manage groups, and automate your space.
             </p>
         </div>

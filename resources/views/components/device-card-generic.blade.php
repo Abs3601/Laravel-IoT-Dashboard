@@ -1,23 +1,23 @@
 
 <a href="{{ route('device.group', $device->device_group) }}" class="block">
-    <div class="card bg-base-100 h-full hover:bg-base-200 transition-colors cursor-pointer">
+    <div class="card bg-card-light dark:bg-card-dark h-full hover:brightness-110 transition-colors cursor-pointer border border-transparent dark:border-gray-700">
     <div class="card-body flex flex-col h-full">
         <div class="flex items-start">
             <div class="flex-1">
-                <h1 class="text-2xl font-semibold">
+                <h1 class="text-2xl font-semibold text-white">
                     {{ $device->friendly_name ?? str_replace('_', ' ', ucfirst($device->entity_id)) }}
                 </h1>
                 <div class="flex items-center gap-4 mt-2 relative z-10">
                     <p class="text-base font-normal badge {{ strtolower($device->current_state) === 'on' ? 'badge-success' : 'badge-neutral' }} mb-0">{{ ucfirst($device->current_state) }}</p>
                     
                     <label class="cursor-pointer flex items-center gap-2">
-                        <span class="text-sm font-medium">Power</span>
+                        <span class="text-sm font-medium text-gray-200 dark:text-gray-300">Power</span>
                         <input type="checkbox" class="toggle toggle-primary" 
                             wire:click.prevent.stop="toggleDevice({{ $device->id }})" 
                             {{ strtolower($device->current_state) === 'on' ? 'checked' : '' }} />
                     </label>
                 </div>
-                <p class="text-sm font-light text-gray-500 mt-2">
+                <p class="text-sm font-light text-gray-400 mt-2">
                     Last Update: {{ optional($device->last_seen_at)->diffForHumans() ?? 'never' }}
                 </p>
             </div>
