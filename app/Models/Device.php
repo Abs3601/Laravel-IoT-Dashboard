@@ -17,12 +17,14 @@ class Device extends Model
         'attributes',
         'last_seen_at',
         'is_hidden',
+        'is_pinned',
     ];
 
     protected $casts = [
         'last_seen_at' => 'datetime',
         'attributes' => 'array',
         'is_hidden' => 'boolean',
+        'is_pinned' => 'boolean',
     ];
 
     /**

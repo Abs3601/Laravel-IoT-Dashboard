@@ -81,6 +81,23 @@ new class extends Component
             });
         }
     }
+
+    public function togglePin($deviceId)
+    {
+        $device = Device::find($deviceId);
+        if ($device) {
+            $device->is_pinned = !$device->is_pinned;
+            $device->save();
+
+            // Optimistic UI update
+            $this->devices->transform(function ($d) use ($deviceId, $device) {
+                if ($d->id === $deviceId) {
+                    $d->is_pinned = $device->is_pinned;
+                }
+                return $d;
+            });
+        }
+    }
 };
 ?>
 
