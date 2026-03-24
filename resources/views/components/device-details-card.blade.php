@@ -101,22 +101,19 @@ new class extends Component
 };
 ?>
 
-<div class="grid gap-6 grid-cols-[repeat(auto-fit,minmax(300px,1fr))]">
-    @foreach($devices as $device)
-        @php
-            $componentName = 'device-card-' . $device->entity_type;
-            $ComponentPath = 'components.' . $componentName;
-        @endphp
+    <div class="grid gap-6 grid-cols-[repeat(auto-fit,minmax(300px,1fr))]">
+        @foreach($devices as $device)
+            @php
+                $componentName = 'device-card-' . $device->entity_type;
+                $ComponentPath = 'components.' . $componentName;
+            @endphp
 
-        <div class="w-full" wire:key="device-card-{{ $device->id }}">
-            @if (view()->exists($ComponentPath))
-                @include($ComponentPath, ['device' => $device])
-            @else
-                @include('components.device-card-generic', ['device' => $device])
-            @endif
-        </div>
-    @endforeach
-</div>
-
-
-
+            <div class="w-full" wire:key="device-card-{{ $device->id }}">
+                @if (view()->exists($ComponentPath))
+                    @include($ComponentPath, ['device' => $device])
+                @else
+                    @include('components.device-card-generic', ['device' => $device])
+                @endif
+            </div>
+        @endforeach
+    </div>
