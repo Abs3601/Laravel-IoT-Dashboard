@@ -28,6 +28,7 @@
                 <a href="{{ route('device.overview') }}" class="text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white mx-2 transition-colors">Devices</a>
                 <a href="{{ route('home') }}" class="text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white mx-2 transition-colors">Groups</a>
                 <a href="{{ route('home') }}" class="text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white mx-2 transition-colors">Automations</a>
+                <a href="{{ route('stats') }}" class="text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white mx-2 transition-colors">Stats</a>
                 
                 <button id="theme-toggle" class="p-2 ml-4 rounded-md focus:outline-none hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors hidden sm:inline-flex align-middle">
                     <svg id="theme-toggle-light-icon" class="hidden w-5 h-5 text-gray-800 dark:text-white" fill="currentColor" viewBox="0 0 20 20">
