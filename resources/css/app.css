@@ -6,6 +6,8 @@
 @source '../**/*.blade.php';
 @source '../**/*.js';
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
     --font-sans:
         "Instrument Sans", ui-sans-serif, system-ui, sans-serif,
@@ -14,17 +16,14 @@
 
     --font-poppins: "Poppins", ui-sans-serif, system-ui, sans-serif;
 
-    --color-card-bg: #36312c;
+    --color-card-light: #36312c;
+    --color-card-dark: #2c2824;
 }
+
+
 
 body {
     @apply font-poppins;
-}
-
-.card-body {
-    @apply bg-white dark:bg-card-bg shadow-md rounded-3xl p-6 text-gray-900 dark:text-white;
-    @apply transition duration-300 ease-in-out transform hover:scale-105;
-    @apply border border-gray-200 dark:border-gray-700;
 }
 
 .container {

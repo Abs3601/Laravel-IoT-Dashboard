@@ -81,25 +81,39 @@ new class extends Component
             });
         }
     }
+
+    public function togglePin($deviceId)
+    {
+        $device = Device::find($deviceId);
+        if ($device) {
+            $device->is_pinned = !$device->is_pinned;
+            $device->save();
+
+            // Optimistic UI update
+            $this->devices->transform(function ($d) use ($deviceId, $device) {
+                if ($d->id === $deviceId) {
+                    $d->is_pinned = $device->is_pinned;
+                }
+                return $d;
+            });
+        }
+    }
 };
 ?>
 
-<div class="grid gap-6 grid-cols-[repeat(auto-fit,minmax(300px,1fr))]">
-    @foreach($devices as $device)
-        @php
-            $componentName = 'device-card-' . $device->entity_type;
-            $ComponentPath = 'components.' . $componentName;
-        @endphp
+    <div class="grid gap-6 grid-cols-[repeat(auto-fit,minmax(300px,1fr))]">
+        @foreach($devices as $device)
+            @php
+                $componentName = 'device-card-' . $device->entity_type;
+                $ComponentPath = 'components.' . $componentName;
+            @endphp
 
-        <div class="w-full" wire:key="device-card-{{ $device->id }}">
-            @if (view()->exists($ComponentPath))
-                @include($ComponentPath, ['device' => $device])
-            @else
-                @include('components.device-card-generic', ['device' => $device])
-            @endif
-        </div>
-    @endforeach
-</div>
-
-
-
+            <div class="w-full" wire:key="device-card-{{ $device->id }}">
+                @if (view()->exists($ComponentPath))
+                    @include($ComponentPath, ['device' => $device])
+                @else
+                    @include('components.device-card-generic', ['device' => $device])
+                @endif
+            </div>
+        @endforeach
+    </div>

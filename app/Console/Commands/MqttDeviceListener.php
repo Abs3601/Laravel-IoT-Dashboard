@@ -58,7 +58,6 @@ class MqttDeviceListener extends Command
 
             $parts = explode('/', $topic);
 
-            // Need at least a prefix and one identifier to be useful
             if (count($parts) < 2) {
                 return;
             }
@@ -84,7 +83,6 @@ class MqttDeviceListener extends Command
             $parsedValue = $this->parseValue($message);
             $newAttributes = array_merge($existingAttributes, [$attribute => $parsedValue]);
 
-            // Only run the heavy device group extraction if the device is brand new
             $deviceGroup = $existingDevice?->device_group ?: $this->extractDeviceGroup($entityId, $entityType);
 
             $updateData = [
@@ -201,7 +199,6 @@ class MqttDeviceListener extends Command
             if (count($parts) < 4) {
                 return null;
             }
-            // Skip status topics
             if ($parts[1] === 'status') {
                 return null;
             }
@@ -362,7 +359,7 @@ class MqttDeviceListener extends Command
     }
 
     /**
-     * Accurately determine the device group based on Home Assistant parent/child naming conventions.
+     * Accurately determine the device group based on Home Assistant parent/child naming conventions. (Will need to test with other formats)
      */
     private function extractDeviceGroup(string $entityId, string $entityType): string
     {
