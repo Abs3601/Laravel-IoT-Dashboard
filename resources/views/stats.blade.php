@@ -6,7 +6,7 @@
     <div class="py-8 px-2 flex items-start justify-between flex-wrap gap-4">
         <div>
             <h1 class="text-3xl font-bold dark:text-white">System Statistics</h1>
-            <p class="text-gray-400 mt-1 text-sm">Live ingestion and performance metrics — refreshes every 5 seconds</p>
+            <p class="text-gray-400 mt-1 text-sm">Live ingestion and performance metrics - refreshes every 5 seconds</p>
         </div>
         <div class="flex items-center gap-2 mt-2 self-end">
             <span class="relative flex h-2.5 w-2.5">
@@ -43,8 +43,8 @@
 
     {{-- Events Per Minute --}}
     <div class="card bg-card-light dark:bg-card-dark rounded-3xl border border-transparent dark:border-gray-700 shadow-sm p-6">
-        <h2 class="text-lg font-semibold dark:text-white">Events Ingested Per Minute</h2>
-        <p class="text-gray-400 text-xs mt-0.5 mb-5">Rolling window — last 60 minutes</p>
+        <h2 class="text-lg font-semibold text-white">Events Ingested Per Minute</h2>
+        <p class="text-gray-400 text-xs mt-0.5 mb-5">Rolling window - last 60 minutes</p>
         <canvas id="eventsPerMinuteChart" height="90"></canvas>
     </div>
 
@@ -52,13 +52,13 @@
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 
         <div class="card bg-card-light dark:bg-card-dark rounded-3xl border border-transparent dark:border-gray-700 shadow-sm p-6">
-            <h2 class="text-lg font-semibold dark:text-white">Events Per Hour</h2>
-            <p class="text-gray-400 text-xs mt-0.5 mb-5">Last 24 hours</p>
+            <h2 class="text-lg font-semibold text-white">Events Per Hour</h2>
+            <p class="text-gray-400 text-xs mt-0.5 mb-5">Last 12 hours</p>
             <canvas id="eventsPerHourChart" height="200"></canvas>
         </div>
 
         <div class="card bg-card-light dark:bg-card-dark rounded-3xl border border-transparent dark:border-gray-700 shadow-sm p-6">
-            <h2 class="text-lg font-semibold dark:text-white">Events by Platform</h2>
+            <h2 class="text-lg font-semibold text-white">Events by Platform</h2>
             <p class="text-gray-400 text-xs mt-0.5 mb-5">Distribution of MQTT message sources</p>
             <canvas id="entityTypeChart" height="200"></canvas>
         </div>
@@ -67,7 +67,7 @@
 
     {{-- Top 10 most active devices --}}
     <div class="card bg-card-light dark:bg-card-dark rounded-3xl border border-transparent dark:border-gray-700 shadow-sm p-6">
-        <h2 class="text-lg font-semibold dark:text-white">Most Active Devices</h2>
+        <h2 class="text-lg font-semibold text-white">Most Active Devices</h2>
         <p class="text-gray-400 text-xs mt-0.5 mb-5">Top 10 by total event count</p>
         <canvas id="topDevicesChart" height="120"></canvas>
     </div>
@@ -104,7 +104,20 @@
             responsive: true,
             animation: false,
             plugins: { legend: { display: false } },
-            scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+            scales: { 
+                y: { beginAtZero: true, ticks: { precision: 0 } },
+                x: { 
+                    grid: { display: false },
+                    ticks: { 
+                        maxRotation: 0, 
+                        minRotation: 0, 
+                        autoSkip: false,
+                        callback: function(val, index, ticks) {
+                            return (ticks.length - 1 - index) % 10 === 0 ? this.getLabelForValue(val) : '';
+                        }
+                    }
+                }
+            }
         }
     });
 
@@ -122,7 +135,20 @@
             responsive: true,
             animation: false,
             plugins: { legend: { display: false } },
-            scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+            scales: { 
+                y: { beginAtZero: true, ticks: { precision: 0 } },
+                x: { 
+                    grid: { display: false },
+                    ticks: { 
+                        maxRotation: 0, 
+                        minRotation: 0, 
+                        autoSkip: false,
+                        callback: function(val, index, ticks) {
+                            return this.getLabelForValue(val);
+                        }
+                    }
+                }
+            }
         }
     });
 
@@ -178,30 +204,29 @@
             .then(({ cards, events_per_minute, events_per_hour, by_entity_type, top_devices }) => {
 
                 document.getElementById('stat-cards').innerHTML =
-                    statCard('Total Events',      cards.total_events,     null,               'text-white') +
-                    statCard('Active Devices',    cards.total_devices,    null,               'text-white')   +
-                    statCard('Events Today',      cards.events_today,     null,               'text-white') +
-                    statCard('Events This Hour',  cards.events_last_hour, null,               'text-white')+
-                    statCard('Ingestion Rate',    cards.ingestion_rate,   'events / min avg', 'text-white');
+                    statCard('Total Events', cards.total_events, null, 'text-white') +
+                    statCard('Active Devices', cards.total_devices, null, 'text-white') +
+                    statCard('Events Today', cards.events_today, null, 'text-white') +
+                    statCard('Events This Hour', cards.events_last_hour, null, 'text-white') +
+                    statCard('Ingestion Rate', cards.ingestion_rate, 'events / min avg', 'text-white');
 
-                epmChart.data.labels                   = events_per_minute.map(r => r.label);
-                epmChart.data.datasets[0].data         = events_per_minute.map(r => r.count);
+                epmChart.data.labels = events_per_minute.map(r => r.label);
+                epmChart.data.datasets[0].data = events_per_minute.map(r => r.count);
                 epmChart.update();
 
-                ephChart.data.labels                   = events_per_hour.map(r => r.label);
-                ephChart.data.datasets[0].data         = events_per_hour.map(r => r.count);
+                ephChart.data.labels = events_per_hour.map(r => r.label);
+                ephChart.data.datasets[0].data = events_per_hour.map(r => r.count);
                 ephChart.update();
 
-                etChart.data.labels                    = by_entity_type.map(r => r.label);
-                etChart.data.datasets[0].data          = by_entity_type.map(r => r.count);
+                etChart.data.labels = by_entity_type.map(r => r.label);
+                etChart.data.datasets[0].data = by_entity_type.map(r => r.count);
                 etChart.update();
 
-                tdChart.data.labels                    = top_devices.map(r => r.label);
-                tdChart.data.datasets[0].data          = top_devices.map(r => r.count);
+                tdChart.data.labels = top_devices.map(r => r.label);
+                tdChart.data.datasets[0].data = top_devices.map(r => r.count);
                 tdChart.update();
 
-                document.getElementById('last-updated').textContent =
-                    'Live · updated at ' + new Date().toLocaleTimeString();
+                document.getElementById('last-updated').textContent = 'Live · updated at ' + new Date().toLocaleTimeString();
             })
             .catch(() => {
                 document.getElementById('last-updated').textContent = 'Error fetching data';
