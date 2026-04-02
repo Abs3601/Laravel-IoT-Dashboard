@@ -1,6 +1,6 @@
 <x-navbar active='stats'/>
 
-<div class="max-w-7xl mx-auto space-y-6">
+<div class="max-w-7xl mb-10 mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
 
     {{-- Header --}}
     <div class="py-8 px-2 flex items-start justify-between flex-wrap gap-4">

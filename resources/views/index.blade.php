@@ -1,6 +1,6 @@
 <x-navbar active='home'/>
 
-<div class="max-w-6xl mx-auto space-y-8">
+<div class="max-w-6xl mb-10 mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
 
     {{-- Hero / Welcome Section --}}
     <div class="py-12 px-6">
