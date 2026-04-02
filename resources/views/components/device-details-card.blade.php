@@ -57,6 +57,23 @@ new class extends Component
                 }
                 return $d;
             });
+
+            // Prevent "turning on to 0% brightness" feedback loop
+            if ($newState === 'ON' && $device->entity_type === 'light') {
+                $attrs = $device->attributes ?? [];
+                if (isset($attrs['brightness']) && $attrs['brightness'] == 0) {
+                    $device->setBrightness(26); // Force to ~10% Brightness if it was 0
+                    
+                    $this->devices->transform(function ($d) use ($deviceId) {
+                        if ($d->id === $deviceId) {
+                            $a = $d->attributes;
+                            $a['brightness'] = 26;
+                            $d->attributes = $a;
+                        }
+                        return $d;
+                    });
+                }
+            }
         }
     }
 
@@ -75,6 +92,47 @@ new class extends Component
                     if ($brightness255 > 0) {
                         $d->current_state = 'on';
                     }
+                    $d->attributes = $attrs;
+                }
+                return $d;
+            });
+        }
+    }
+
+    public function setColor($deviceId, $hexColor)
+    {
+        $device = Device::find($deviceId);
+        if ($device) {
+            $device->setColor($hexColor);
+            
+            // Convert hex to rgb for optimistic update
+            $hex = ltrim($hexColor, '#');
+            if (strlen($hex) == 6) {
+                $r = hexdec(substr($hex, 0, 2));
+                $g = hexdec(substr($hex, 2, 2));
+                $b = hexdec(substr($hex, 4, 2));
+                
+                $this->devices->transform(function ($d) use ($deviceId, $r, $g, $b) {
+                    if ($d->id == $deviceId) {
+                        $attrs = $d->attributes;
+                        $attrs['rgb_color'] = [$r, $g, $b];
+                        $d->attributes = $attrs;
+                    }
+                    return $d;
+                });
+            }
+        }
+    }
+
+    public function setColorTemp($deviceId, $temp)
+    {
+        $device = Device::find($deviceId);
+        if ($device) {
+            $device->setColorTemp($temp);
+            $this->devices->transform(function ($d) use ($deviceId, $temp) {
+                if ($d->id == $deviceId) {
+                    $attrs = $d->attributes;
+                    $attrs['color_temp'] = $temp;
                     $d->attributes = $attrs;
                 }
                 return $d;

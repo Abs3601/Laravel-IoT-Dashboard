@@ -42,4 +42,20 @@ class Device extends Model
     {
         app(\App\Services\MqttService::class)->sendBrightness($this, $brightness);
     }
+
+    /**
+     * Send an MQTT color command to this device.
+     */
+    public function setColor(string $hexColor): void
+    {
+        app(\App\Services\MqttService::class)->sendColor($this, $hexColor);
+    }
+
+    /**
+     * Send an MQTT color temperature command to this device.
+     */
+    public function setColorTemp(int $temp): void
+    {
+        app(\App\Services\MqttService::class)->sendColorTemp($this, $temp);
+    }
 }

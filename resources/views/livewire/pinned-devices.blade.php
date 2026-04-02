@@ -37,13 +37,29 @@ new class extends \Livewire\Component
             $newState = strtolower($device->current_state) === 'on' ? 'OFF' : 'ON';
             $device->sendCommand($newState);
 
-            // Optimistic UI update
             $this->devices->transform(function ($d) use ($deviceId, $newState) {
                 if ($d->id === $deviceId) {
                     $d->current_state = strtolower($newState);
                 }
                 return $d;
             });
+
+            //  Give the device some brightness if its off and 0 brightness
+            if ($newState === 'ON' && $device->entity_type === 'light') {
+                $attrs = $device->attributes ?? [];
+                if (isset($attrs['brightness']) && $attrs['brightness'] == 0) {
+                    $device->setBrightness(26);
+                    
+                    $this->devices->transform(function ($d) use ($deviceId) {
+                        if ($d->id === $deviceId) {
+                            $a = $d->attributes;
+                            $a['brightness'] = 26;
+                            $d->attributes = $a;
+                        }
+                        return $d;
+                    });
+                }
+            }
         }
     }
 
@@ -69,14 +85,53 @@ new class extends \Livewire\Component
         }
     }
 
+    public function setColor($deviceId, $hexColor)
+    {
+        $device = Device::find($deviceId);
+        if ($device) {
+            $device->setColor($hexColor);
+            
+            // Convert hex to rgb
+            $hex = ltrim($hexColor, '#');
+            if (strlen($hex) == 6) {
+                $r = hexdec(substr($hex, 0, 2));
+                $g = hexdec(substr($hex, 2, 2));
+                $b = hexdec(substr($hex, 4, 2));
+                
+                $this->devices->transform(function ($d) use ($deviceId, $r, $g, $b) {
+                    if ($d->id == $deviceId) {
+                        $attrs = $d->attributes;
+                        $attrs['rgb_color'] = [$r, $g, $b];
+                        $d->attributes = $attrs;
+                    }
+                    return $d;
+                });
+            }
+        }
+    }
+
+    public function setColorTemp($deviceId, $temp)
+    {
+        $device = Device::find($deviceId);
+        if ($device) {
+            $device->setColorTemp($temp);
+            $this->devices->transform(function ($d) use ($deviceId, $temp) {
+                if ($d->id == $deviceId) {
+                    $attrs = $d->attributes;
+                    $attrs['color_temp'] = $temp;
+                    $d->attributes = $attrs;
+                }
+                return $d;
+            });
+        }
+    }
+
     public function togglePin($deviceId)
     {
         $device = Device::find($deviceId);
         if ($device) {
             $device->is_pinned = !$device->is_pinned;
             $device->save();
-            
-            // Re-fetch to immediately remove it from the pinned list
             $this->refreshDevices();
         }
     }

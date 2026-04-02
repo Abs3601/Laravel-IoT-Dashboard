@@ -66,11 +66,88 @@ class MqttService
     }
 
     /**
+     * Send an RGB colour command to a device.
+     */
+    public function sendColor(Device $device, string $hexColor): void
+    {
+        $type = strtolower($device->entity_type);
+        
+        $topic = $device->attributes['rgb_command_topic'] 
+            ?? $this->getCommandTopic($device, 'set_color');
+            
+        if (!$topic) return;
+
+        $hex = ltrim($hexColor, '#');
+        $r = hexdec(substr($hex, 0, 2));
+        $g = hexdec(substr($hex, 2, 2));
+        $b = hexdec(substr($hex, 4, 2));
+
+        if ($type === 'zigbee' || $type === 'zigbee2mqtt') {
+            $payload = json_encode(['color' => ['r' => $r, 'g' => $g, 'b' => $b]]);
+        } elseif ($type === 'tasmota') {
+            $payload = strtoupper($hex);
+        } else {
+            // Home Assistant / Generic fallback
+            $payload = "{$r},{$g},{$b}";
+        }
+
+        try {
+            config([
+                'mqtt-client.connections.default.host' => Setting::get('mqtt_host'), 
+                'mqtt-client.connections.default.port' => Setting::get('port'), 
+                'mqtt-client.connections.default.client_id' => Setting::get('mqtt_client_id') . '_colpub', 
+                'mqtt-client.connections.default.auth.username' => Setting::get('mqtt_auth_username'), 
+                'mqtt-client.connections.default.auth.password' => Setting::get('mqtt_auth_password')
+            ]);
+            $mqtt = MQTT::connection();
+            $mqtt->publish($topic, $payload, 0);
+            Log::info("Published Color -> Topic: {$topic}, Payload: {$payload}");
+        } catch (\Exception $e) {
+            Log::error("Failed to publish color: " . $e->getMessage());
+        }
+    }
+
+    /**
+     * Send a colour temperature command to a device.
+     */
+    public function sendColorTemp(Device $device, int $temp): void
+    {
+        $type = strtolower($device->entity_type);
+        
+        $topic = $device->attributes['color_temp_command_topic'] 
+            ?? $this->getCommandTopic($device, 'set_temp');
+            
+        if (!$topic) return;
+
+        if ($type === 'zigbee' || $type === 'zigbee2mqtt') {
+            $payload = json_encode(['color_temp' => $temp]);
+        } elseif ($type === 'tasmota') {
+            $payload = (string) $temp;
+        } else {
+            $payload = (string) $temp;
+        }
+
+        try {
+            config([
+                'mqtt-client.connections.default.host' => Setting::get('mqtt_host'), 
+                'mqtt-client.connections.default.port' => Setting::get('port'), 
+                'mqtt-client.connections.default.client_id' => Setting::get('mqtt_client_id') . '_tempub', 
+                'mqtt-client.connections.default.auth.username' => Setting::get('mqtt_auth_username'), 
+                'mqtt-client.connections.default.auth.password' => Setting::get('mqtt_auth_password')
+            ]);
+            $mqtt = MQTT::connection();
+            $mqtt->publish($topic, $payload, 0);
+            Log::info("Published Color Temp -> Topic: {$topic}, Payload: {$payload}");
+        } catch (\Exception $e) {
+            Log::error("Failed to publish color temperature: " . $e->getMessage());
+        }
+    }
+
+    /**
      * Determine the correct command topic based on device type.
      */
     protected function getCommandTopic(Device $device, string $suffix = 'set'): ?string
     {
-        // Home Assistant Discovery (prioritize attribute if exists)
         if (!empty($device->attributes['command_topic'])) {
             return $device->attributes['command_topic'];
         }
@@ -78,10 +155,8 @@ class MqttService
         $type = strtolower($device->entity_type);
         $id = $device->entity_id;
 
-        // 2. Fallback for Home Assistant domains if no config was captured yet
         $haDomains = ['light', 'switch', 'button', 'fan', 'lock', 'cover', 'climate', 'siren', 'number', 'input_boolean'];
         if (in_array($type, $haDomains)) {
-            // HA MQTT Discovery default fallback pattern: (best guess)
             return "homeassistant/{$type}/{$id}/{$suffix}";
         }
 
@@ -99,7 +174,6 @@ class MqttService
      */
     protected function getCommandPayload(Device $device, mixed $state): string
     {
-        // HA Discovery custom payloads
         $isOn = strtolower((string) $state) === 'on';
         if ($isOn && isset($device->attributes['payload_on'])) {
             return (string) $device->attributes['payload_on'];

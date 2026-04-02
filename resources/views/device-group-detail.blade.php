@@ -18,7 +18,7 @@
             $isOn = strtolower($state) === 'on';
         @endphp
 
-        <div class="card bg-card-light dark:bg-card-dark rounded-3xl shadow-md border border-transparent dark:text-white dark:border-gray-700 mb-6">
+        <div class="card bg-card-light dark:bg-card-dark rounded-3xl border border-transparent dark:text-white dark:border-gray-700 mb-6">
             <div class="card-body p-6 text-white">
                 <div class="flex items-center justify-between">
                     <div>
@@ -27,9 +27,11 @@
                     </div>
                     <div class="flex items-center gap-4">
                         @if($isToggleable)
-                            <span class="badge text-white {{ $isOn ? 'badge-success' : 'badge-neutral' }} badge-lg text-lg p-4">
-                                {{ $isOn ? 'On' : 'Off' }}
-                            </span>
+                            <div class="flex items-center justify-center w-16 h-16 rounded-full border-2 transition-all duration-300 {{ $isOn ? 'border-white bg-white text-gray-800 shadow-[0_0_15px_rgba(255,255,255,0.4)]' : 'border-gray-500 bg-transparent text-gray-400' }}">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-8 h-8">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M5.636 5.636a9 9 0 1012.728 0M12 3v9" />
+                                </svg>
+                            </div>
                         @elseif($state)
                             <span class="badge text-white badge-info badge-lg text-lg p-4">
                                 {{ ucfirst($state) }}
@@ -49,17 +51,24 @@
             <div class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
                 @foreach($device->attributes as $key => $value)
                     @if(!in_array($key, ['friendly_name', 'state']))
-                        <div class="card bg-card-light dark:bg-card-dark rounded-3xl shadow-md border border-transparent dark:border-gray-700">
-                            <div class="card-body p-4 text-white">
-                                <p class="text-sm text-gray-400">{{ ucfirst(str_replace('_', ' ', $key)) }}</p>
-                                <p class="text-2xl font-bold text-white">
-                                    @if(is_array($value))
-                                        {{ json_encode($value) }}
-                                    @elseif(is_bool($value))
-                                        {{ $value ? 'Yes' : 'No' }}
-                                    @else
-                                        {{ $value }}
-                                    @endif
+                        <div class="card bg-card-light dark:bg-card-dark rounded-3xl border border-transparent dark:border-gray-700">
+                            <div class="card-body p-5 text-white">
+                                <p class="text-sm text-gray-400 mb-1">{{ ucfirst(str_replace('_', ' ', $key)) }}</p>
+                                <p class="text-xl font-bold text-white break-words">
+                                    @php
+                                        if (is_array($value)) {
+                                            $disp = implode(', ', $value);
+                                        } elseif (is_bool($value)) {
+                                            $disp = $value ? 'Yes' : 'No';
+                                        } elseif (is_string($value) && preg_match('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/', $value)) {
+                                            try {
+                                                $disp = \Carbon\Carbon::parse($value)->diffForHumans();
+                                            } catch (\Exception $e) { $disp = $value; }
+                                        } else {
+                                            $disp = $value;
+                                        }
+                                    @endphp
+                                    {{ $disp }}
                                 </p>
                             </div>
                         </div>
@@ -77,12 +86,11 @@
                         $unit = $related->attributes['unit_of_measurement'] ?? '';
                         $relatedName = $related->friendly_name
                             ?? ucfirst(str_replace('_', ' ', $related->entity_id));
-                        // Remove the parent device name prefix for a cleaner label
                         $shortName = str_replace($friendlyName . ' ', '', $relatedName);
                         $shortName = str_replace(ucfirst(str_replace('_', ' ', $device->entity_id)) . ' ', '', $shortName);
                     @endphp
-                    <div class="card bg-card-light dark:bg-card-dark rounded-3xl shadow-md border border-transparent dark:border-gray-700">
-                        <div class="card-body p-4 text-white">
+                    <div class="card bg-card-light dark:bg-card-dark rounded-3xl border border-transparent dark:border-gray-700">
+                        <div class="card-body p-5 text-white">
                             <p class="text-sm text-gray-400">{{ $shortName }}</p>
                             <p class="text-2xl font-bold text-white">
                                 {{ $related->current_state ?? '—' }}
