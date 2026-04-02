@@ -58,8 +58,8 @@
         </div>
 
         <div class="card bg-card-light dark:bg-card-dark rounded-3xl border border-transparent dark:border-gray-700 shadow-sm p-6">
-            <h2 class="text-lg font-semibold text-white">Events by Platform</h2>
-            <p class="text-gray-400 text-xs mt-0.5 mb-5">Distribution of MQTT message sources</p>
+            <h2 class="text-lg font-semibold text-white">Events by Entity Type</h2>
+            <p class="text-gray-400 text-xs mt-0.5 mb-5">Distribution of events across sensor/device categories</p>
             <canvas id="entityTypeChart" height="200"></canvas>
         </div>
 

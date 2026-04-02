@@ -18,6 +18,21 @@ class OnboardingController extends Controller
         Setting::set('mqtt_auth_username', $request->mqtt_auth_username);
         Setting::set('mqtt_auth_password', Hash::make($request->mqtt_auth_password));
         Setting::set('mqtt_client_id', $request->mqtt_client_id);
+        
+        $timezone = $request->timezone ?? 'UTC';
+        $envFile = base_path('.env');
+        if (file_exists($envFile)) {
+            $env = file_get_contents($envFile);
+            if (strpos($env, 'APP_TIMEZONE=') !== false) {
+                $env = preg_replace('/^APP_TIMEZONE=.*$/m', 'APP_TIMEZONE=' . $timezone, $env);
+            } else {
+                $env .= "\nAPP_TIMEZONE=" . $timezone . "\n";
+            }
+            file_put_contents($envFile, $env);
+            // Clear config cache to ensure the new timezone applies immediately
+            \Illuminate\Support\Facades\Artisan::call('config:clear');
+        }
+
         Setting::set('onboarding_completed', true);
         return redirect()->route('home');
     }
