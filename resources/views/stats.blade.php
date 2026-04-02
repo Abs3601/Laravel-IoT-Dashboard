@@ -6,7 +6,7 @@
     <div class="py-8 px-2 flex items-start justify-between flex-wrap gap-4">
         <div>
             <h1 class="text-3xl font-bold dark:text-white">System Statistics</h1>
-            <p class="text-gray-400 mt-1 text-sm">Live ingestion and performance metrics - refreshes every 5 seconds</p>
+            <p class="text-gray-400 mt-1 text-sm">Live ingestion and performance metrics (refreshes every 5 seconds)</p>
         </div>
         <div class="flex items-center gap-2 mt-2 self-end">
             <span class="relative flex h-2.5 w-2.5">
@@ -18,46 +18,60 @@
     </div>
 
     {{-- Stat Cards --}}
-    <div class="grid grid-cols-2 md:grid-cols-5 gap-4" id="stat-cards">
-        <div class="card bg-card-light dark:bg-card-dark rounded-3xl border border-transparent dark:border-gray-700 shadow-sm p-5 text-center animate-pulse">
+    <div class="grid grid-cols-2 md:grid-cols-6 gap-4" id="stat-cards">
+        <div class="card bg-card-light dark:bg-card-dark rounded-3xl border border-transparent dark:border-gray-700 p-5 text-center animate-pulse">
             <div class="h-8 bg-gray-700 rounded mb-2"></div>
             <div class="h-4 bg-gray-700 rounded"></div>
         </div>
-        <div class="card bg-card-light dark:bg-card-dark rounded-3xl border border-transparent dark:border-gray-700 shadow-sm p-5 text-center animate-pulse">
+        <div class="card bg-card-light dark:bg-card-dark rounded-3xl border border-transparent dark:border-gray-700 p-5 text-center animate-pulse">
             <div class="h-8 bg-gray-700 rounded mb-2"></div>
             <div class="h-4 bg-gray-700 rounded"></div>
         </div>
-        <div class="card bg-card-light dark:bg-card-dark rounded-3xl border border-transparent dark:border-gray-700 shadow-sm p-5 text-center animate-pulse">
+        <div class="card bg-card-light dark:bg-card-dark rounded-3xl border border-transparent dark:border-gray-700 p-5 text-center animate-pulse">
             <div class="h-8 bg-gray-700 rounded mb-2"></div>
             <div class="h-4 bg-gray-700 rounded"></div>
         </div>
-        <div class="card bg-card-light dark:bg-card-dark rounded-3xl border border-transparent dark:border-gray-700 shadow-sm p-5 text-center animate-pulse">
+        <div class="card bg-card-light dark:bg-card-dark rounded-3xl border border-transparent dark:border-gray-700 p-5 text-center animate-pulse">
             <div class="h-8 bg-gray-700 rounded mb-2"></div>
             <div class="h-4 bg-gray-700 rounded"></div>
         </div>
-        <div class="card bg-card-light dark:bg-card-dark rounded-3xl border border-transparent dark:border-gray-700 shadow-sm p-5 text-center animate-pulse">
+        <div class="card bg-card-light dark:bg-card-dark rounded-3xl border border-transparent dark:border-gray-700 p-5 text-center animate-pulse">
+            <div class="h-8 bg-gray-700 rounded mb-2"></div>
+            <div class="h-4 bg-gray-700 rounded"></div>
+        </div>
+        <div class="card bg-card-light dark:bg-card-dark rounded-3xl border border-transparent dark:border-gray-700 p-5 text-center animate-pulse">
             <div class="h-8 bg-gray-700 rounded mb-2"></div>
             <div class="h-4 bg-gray-700 rounded"></div>
         </div>
     </div>
 
+    {{-- Load Test Latency Panel --}}
+    <div id="latency-panel" class="hidden card bg-card-light dark:bg-card-dark rounded-3xl border border-yellow-500/30 p-6">
+        <div class="flex items-center gap-2 mb-1">
+            <span class="inline-block w-2 h-2 rounded-full bg-yellow-400 animate-pulse"></span>
+            <h2 class="text-lg font-semibold text-white">Load Test Latency Metrics</h2>
+        </div>
+        <p class="text-gray-400 text-xs mt-0.5 mb-5">End-to-end latency measured from MQTT publish to database insertion (10-minute window)</p>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4" id="latency-cards"></div>
+    </div>
+
     {{-- Events Per Minute --}}
-    <div class="card bg-card-light dark:bg-card-dark rounded-3xl border border-transparent dark:border-gray-700 shadow-sm p-6">
+    <div class="card bg-card-light dark:bg-card-dark rounded-3xl border border-transparent dark:border-gray-700 p-6">
         <h2 class="text-lg font-semibold text-white">Events Ingested Per Minute</h2>
-        <p class="text-gray-400 text-xs mt-0.5 mb-5">Rolling window - last 60 minutes</p>
+        <p class="text-gray-400 text-xs mt-0.5 mb-5">Rolling window: last 60 minutes</p>
         <canvas id="eventsPerMinuteChart" height="90"></canvas>
     </div>
 
     {{-- Events Per Hour --}}
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 
-        <div class="card bg-card-light dark:bg-card-dark rounded-3xl border border-transparent dark:border-gray-700 shadow-sm p-6">
+        <div class="card bg-card-light dark:bg-card-dark rounded-3xl border border-transparent dark:border-gray-700 p-6">
             <h2 class="text-lg font-semibold text-white">Events Per Hour</h2>
-            <p class="text-gray-400 text-xs mt-0.5 mb-5">Last 12 hours</p>
+            <p class="text-gray-400 text-xs mt-0.5 mb-5">Previous 12 hours</p>
             <canvas id="eventsPerHourChart" height="200"></canvas>
         </div>
 
-        <div class="card bg-card-light dark:bg-card-dark rounded-3xl border border-transparent dark:border-gray-700 shadow-sm p-6">
+        <div class="card bg-card-light dark:bg-card-dark rounded-3xl border border-transparent dark:border-gray-700 p-6">
             <h2 class="text-lg font-semibold text-white">Events by Platform</h2>
             <p class="text-gray-400 text-xs mt-0.5 mb-5">Distribution of MQTT message sources</p>
             <canvas id="entityTypeChart" height="200"></canvas>
@@ -66,7 +80,7 @@
     </div>
 
     {{-- Top 10 most active devices --}}
-    <div class="card bg-card-light dark:bg-card-dark rounded-3xl border border-transparent dark:border-gray-700 shadow-sm p-6">
+    <div class="card bg-card-light dark:bg-card-dark rounded-3xl border border-transparent dark:border-gray-700 p-6">
         <h2 class="text-lg font-semibold text-white">Most Active Devices</h2>
         <p class="text-gray-400 text-xs mt-0.5 mb-5">Top 10 by total event count</p>
         <canvas id="topDevicesChart" height="120"></canvas>
@@ -191,7 +205,7 @@
 
     function statCard(label, value, sub, colorClass) {
         return `
-            <div class="card bg-card-light dark:bg-card-dark rounded-3xl border border-transparent dark:border-gray-700 shadow-sm p-5 text-center">
+            <div class="card bg-card-light dark:bg-card-dark rounded-3xl border border-transparent dark:border-gray-700 p-5 text-center">
                 <div class="text-3xl font-bold ${colorClass}">${typeof value === 'number' ? value.toLocaleString() : value}</div>
                 <div class="text-white font-medium text-sm mt-1">${label}</div>
                 ${sub ? `<div class="text-gray-500 text-xs mt-0.5">${sub}</div>` : ''}
@@ -201,14 +215,28 @@
     function refresh() {
         fetch('/api/stats')
             .then(r => r.json())
-            .then(({ cards, events_per_minute, events_per_hour, by_entity_type, top_devices }) => {
+            .then(({ cards, events_per_minute, events_per_hour, by_entity_type, top_devices, latency }) => {
 
                 document.getElementById('stat-cards').innerHTML =
-                    statCard('Total Events', cards.total_events, null, 'text-white') +
-                    statCard('Active Devices', cards.total_devices, null, 'text-white') +
-                    statCard('Events Today', cards.events_today, null, 'text-white') +
-                    statCard('Events This Hour', cards.events_last_hour, null, 'text-white') +
-                    statCard('Ingestion Rate', cards.ingestion_rate, 'events / min avg', 'text-white');
+                    statCard('Total Events',      cards.total_events,     null,               'text-white') +
+                    statCard('Active Devices',    cards.total_devices,    null,               'text-white') +
+                    statCard('Events Today',      cards.events_today,     null,               'text-white') +
+                    statCard('Events This Hour',  cards.events_last_hour, null,               'text-white') +
+                    statCard('Avg Rate',          cards.ingestion_rate,   'events / min',     'text-white') +
+                    statCard('Peak Rate',         cards.peak_rate,        'events / min peak','text-white');
+
+                // Latency panel — show only when load test data is present
+                const lp = document.getElementById('latency-panel');
+                if (latency && latency.sample_count > 0) {
+                    lp.classList.remove('hidden');
+                    document.getElementById('latency-cards').innerHTML =
+                        statCard('Avg Latency', latency.avg_ms + ' ms', null, 'text-yellow-400') +
+                        statCard('Min Latency', latency.min_ms + ' ms', null, 'text-emerald-400') +
+                        statCard('Max Latency', latency.max_ms + ' ms', null, 'text-red-400') +
+                        statCard('Samples', latency.sample_count, 'events measured', 'text-white');
+                } else {
+                    lp.classList.add('hidden');
+                }
 
                 epmChart.data.labels = events_per_minute.map(r => r.label);
                 epmChart.data.datasets[0].data = events_per_minute.map(r => r.count);
@@ -226,7 +254,7 @@
                 tdChart.data.datasets[0].data = top_devices.map(r => r.count);
                 tdChart.update();
 
-                document.getElementById('last-updated').textContent = 'Live · updated at ' + new Date().toLocaleTimeString();
+                document.getElementById('last-updated').textContent = 'Live (updated at ' + new Date().toLocaleTimeString() + ')';
             })
             .catch(() => {
                 document.getElementById('last-updated').textContent = 'Error fetching data';

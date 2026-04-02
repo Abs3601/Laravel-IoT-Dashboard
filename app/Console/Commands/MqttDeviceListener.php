@@ -17,7 +17,7 @@ class MqttDeviceListener extends Command
      *
      * @var string
      */
-    protected $signature = 'app:mqtt:listen-devices';
+    protected $signature = 'app:mqtt:listen-devices {--qos=0 : MQTT QoS level for subscription (0 or 1)} {--test : Connect to localhost and only listen to loadtest/ topics}';
 
     /**
      * The console command description.
@@ -31,30 +31,45 @@ class MqttDeviceListener extends Command
      */
     public function handle()
     {
-        $this->info('Connecting to MQTT broker...');
+        $testMode = $this->option('test');
+        $qos = (int) $this->option('qos');
 
-        /** @var \PhpMqtt\Client\Contracts\MqttClient $mqtt */
-        config([
-            'mqtt-client.connections.default.host' => Setting::get('mqtt_host'), 
-            'mqtt-client.connections.default.port' => Setting::get('port'), 
-            'mqtt-client.connections.default.client_id' => Setting::get('mqtt_client_id'), 
-            'mqtt-client.connections.default.auth.username' => Setting::get('mqtt_auth_username'), 
-            'mqtt-client.connections.default.auth.password' => Setting::get('mqtt_auth_password'),
-            'mqtt-client.connections.default.connection_settings.keep_alive_interval' => 600, // Extending this timeout to 10 mins cos itll crash on low end hardware otherwise
-        ]);
+        if ($testMode) {
+            $this->info('TEST MODE — connecting to localhost, listening to loadtest/# only');
+            
+            $this->info('Clearing old load test data from the database...');
+            \App\Models\IoTEvent::where('entity_type', 'loadtest')->delete();
+            \App\Models\Device::where('entity_type', 'loadtest')->delete();
+            $this->info('Clean up finished! Ready for a fresh test.');
+
+            config([
+                'mqtt-client.connections.default.host' => 'localhost',
+                'mqtt-client.connections.default.port' => 1883,
+                'mqtt-client.connections.default.client_id' => 'laravel_load_test_listener',
+                'mqtt-client.connections.default.connection_settings.auth.username' => null,
+                'mqtt-client.connections.default.connection_settings.auth.password' => null,
+                'mqtt-client.connections.default.connection_settings.keep_alive_interval' => 600,
+            ]);
+        } else {
+            $this->info('Connecting to MQTT broker...');
+            config([
+                'mqtt-client.connections.default.host' => Setting::get('mqtt_host'),
+                'mqtt-client.connections.default.port' => Setting::get('port'),
+                'mqtt-client.connections.default.client_id' => Setting::get('mqtt_client_id'),
+                'mqtt-client.connections.default.auth.username' => Setting::get('mqtt_auth_username'),
+                'mqtt-client.connections.default.auth.password' => Setting::get('mqtt_auth_password'),
+                'mqtt-client.connections.default.connection_settings.keep_alive_interval' => 600,
+            ]);
+        }
+
         $mqtt = MQTT::connection();
-
 
         $pendingBroadcasts = [];
 
-        // Subscribe to all topics — works with any MQTT broker structure
-        // Common patterns:
-        //   Home Assistant:  homeassistant/{entity_type}/{entity_id}/{attribute}
-        //   Zigbee2MQTT:     zigbee2mqtt/{device_name}
-        //   Tasmota:         tele/{device_name}/STATE, cmnd/{device_name}/POWER
-        //   ESPHome:         esphome/{device_name}/{sensor}/state
-        //   Generic:         {prefix}/{type}/{id}/{attribute}
-        $mqtt->subscribe('#', function (string $topic, string $message) use (&$pendingBroadcasts) {
+        $subscribeTopic = $testMode ? 'loadtest/#' : '#';
+        $this->info("Subscribing to '{$subscribeTopic}' at QoS {$qos}...");
+
+        $mqtt->subscribe($subscribeTopic, function (string $topic, string $message) use (&$pendingBroadcasts) {
 
             $parts = explode('/', $topic);
 
@@ -81,6 +96,13 @@ class MqttDeviceListener extends Command
 
             $existingAttributes = $existingDevice?->attributes ?? [];
             $parsedValue = $this->parseValue($message);
+
+            // If the payload contains a load-test timestamp, calculate end-to-end latency
+            $latencyMs = null;
+            if (is_array($parsedValue) && isset($parsedValue['_test_ts'])) {
+                $latencyMs = round((microtime(true) - (float) $parsedValue['_test_ts']) * 1000, 0);
+            }
+
             $newAttributes = array_merge($existingAttributes, [$attribute => $parsedValue]);
 
             $deviceGroup = $existingDevice?->device_group ?: $this->extractDeviceGroup($entityId, $entityType);
@@ -165,15 +187,16 @@ class MqttDeviceListener extends Command
             if (($updateData['current_state'] ?? null) !== null) {
                 IoTEvent::create([
                     'entity_type' => $entityType,
-                    'entity_id' => $entityId,
-                    'state' => $device->current_state,
-                    'attributes' => $device->attributes,
-                    'created_at' => now(),
+                    'entity_id'   => $entityId,
+                    'state'       => $device->current_state,
+                    'attributes'  => $device->attributes,
+                    'latency_ms'  => $latencyMs,
+                    'created_at'  => now(),
                 ]);
 
-                $this->info("  -> State change logged: {$device->current_state}");
+                $this->info("  -> State change logged: {$device->current_state}" . ($latencyMs !== null ? " (latency: {$latencyMs}ms)" : ''));
             }
-        }, 0);
+        }, $qos);
 
         $this->info('Listening for all device updates... (Press Ctrl+C to stop)');
         $mqtt->loop(true);

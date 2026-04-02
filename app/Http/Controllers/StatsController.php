@@ -23,7 +23,19 @@ class StatsController extends Controller
 
         // Average events per minute over the last 5 minutes
         $eventsLast5Min = IoTEvent::where('created_at', '>=', now()->subMinutes(5))->count();
-        $ingestionRate = round($eventsLast5Min / 5, 1);
+        $ingestionRate  = round($eventsLast5Min / 5, 1);
+
+        // Peak events in any single minute over the last hour
+        $peakRow = DB::selectOne("
+            SELECT MAX(cnt) AS peak
+            FROM (
+                SELECT COUNT(*) AS cnt
+                FROM iot_events
+                WHERE created_at >= NOW() - INTERVAL 60 MINUTE
+                GROUP BY DATE_FORMAT(created_at, '%H:%i')
+            ) sub
+        ");
+        $peakRate = (int) ($peakRow->peak ?? 0);
 
         // Events grouped by minute — last 60 minutes (line chart)
         $rawPerMinute = DB::select("
@@ -73,18 +85,40 @@ class StatsController extends Controller
             LIMIT 10
         ");
 
+        // Latency stats
+        $latencyRow = DB::selectOne("
+            SELECT
+                ROUND(AVG(latency_ms), 0)  AS avg_ms,
+                ROUND(MAX(latency_ms), 0)  AS max_ms,
+                ROUND(MIN(latency_ms), 0)  AS min_ms,
+                COUNT(*)                   AS sample_count
+            FROM iot_events
+            WHERE latency_ms IS NOT NULL
+            AND created_at >= NOW() - INTERVAL 10 MINUTE
+        ");
+
+        $latency = [
+            'avg_ms'       => $latencyRow->avg_ms ?? null,
+            'max_ms'       => $latencyRow->max_ms ?? null,
+            'min_ms'       => $latencyRow->min_ms ?? null,
+            'sample_count' => (int) ($latencyRow->sample_count ?? 0),
+        ];
+
         return response()->json([
             'cards' => [
-                'total_events' => $totalEvents,
-                'total_devices' => $totalDevices,
-                'events_today' => $eventsToday,
+                'total_events'     => $totalEvents,
+                'total_devices'    => $totalDevices,
+                'events_today'     => $eventsToday,
                 'events_last_hour' => $eventsLastHour,
-                'ingestion_rate' => $ingestionRate,
+                'ingestion_rate'   => $ingestionRate,
+                'peak_rate'        => $peakRate,
             ],
             'events_per_minute' => $eventsPerMinute,
-            'events_per_hour' => $eventsPerHour,
-            'by_entity_type' => $byEntityType,
-            'top_devices' => $topDevices,
+            'events_per_hour'   => $eventsPerHour,
+            'by_entity_type'    => $byEntityType,
+            'top_devices'       => $topDevices,
+            'latency'           => $latency,
         ]);
     }
 }
+
