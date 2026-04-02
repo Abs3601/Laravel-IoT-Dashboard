@@ -43,6 +43,15 @@
                     <input type="text" id="mqtt_client_id" name="mqtt_client_id" placeholder="e.g. dulmqtt_dashboard" class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 sm:text-sm transition-colors" required>
                     <p class="mt-1.5 text-xs text-gray-500 dark:text-gray-400">A unique identifier for this application instance to connect to the broker.</p>
                 </div>
+                <div class="mt-4 border-t border-gray-100 dark:border-gray-700 pt-5">
+                    <label for="timezone" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Timezone</label>
+                    <select id="timezone" name="timezone" class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-gray-900 dark:text-white focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 sm:text-sm transition-colors" required>
+                        @foreach(timezone_identifiers_list() as $tz)
+                            <option value="{{ $tz }}" {{ $tz === 'Europe/London' ? 'selected' : '' }}>{{ $tz }}</option>
+                        @endforeach
+                    </select>
+                    <p class="mt-1.5 text-xs text-gray-500 dark:text-gray-400">Select your local timezone to ensure accurate dashboard timelines.</p>
+                </div>
             </div>
 
             <div class="pt-6 mt-6 border-t border-gray-100 dark:border-gray-700 flex justify-end">
