@@ -63,26 +63,17 @@ class MqttDeviceListener extends Command
         }
 
         $mqtt = MQTT::connection();
-
         $pendingBroadcasts = [];
 
         $subscribeTopic = $testMode ? 'loadtest/#' : '#';
         $this->info("Subscribing to '{$subscribeTopic}' at QoS {$qos}...");
 
         $mqtt->subscribe($subscribeTopic, function (string $topic, string $message) use (&$pendingBroadcasts) {
-
             $parts = explode('/', $topic);
+            if (count($parts) < 2) return;
 
-            if (count($parts) < 2) {
-                return;
-            }
-
-            // Parse topic structure dynamically
             $parsed = $this->parseTopic($parts);
-
-            if ($parsed === null) {
-                return;
-            }
+            if ($parsed === null) return;
 
             $entityType = $parsed['entity_type'];
             $entityId = $parsed['entity_id'];
@@ -97,14 +88,13 @@ class MqttDeviceListener extends Command
             $existingAttributes = $existingDevice?->attributes ?? [];
             $parsedValue = $this->parseValue($message);
 
-            // If the payload contains a load-test timestamp, calculate end-to-end latency
+            // Calculate end-to-end latency if payload contains a load-test timestamp
             $latencyMs = null;
             if (is_array($parsedValue) && isset($parsedValue['_test_ts'])) {
                 $latencyMs = round((microtime(true) - (float) $parsedValue['_test_ts']) * 1000, 0);
             }
 
             $newAttributes = array_merge($existingAttributes, [$attribute => $parsedValue]);
-
             $deviceGroup = $existingDevice?->device_group ?: $this->extractDeviceGroup($entityId, $entityType);
 
             $updateData = [
@@ -114,17 +104,14 @@ class MqttDeviceListener extends Command
             ];
 
             if ($attribute === 'state') {
-                $updateData['current_state'] = is_string($parsedValue)
-                    ? strtolower(trim($parsedValue))
-                    : (string) $parsedValue;
+                $updateData['current_state'] = is_string($parsedValue) ? strtolower(trim($parsedValue)) : (string) $parsedValue;
             }
 
-            // For JSON payloads (Zigbee2MQTT, Tasmota), extract state from the payload
+            // For JSON payloads (Zigbee2MQTT, Tasmota), extract individual attributes
             if ($attribute === 'payload' && is_array($parsedValue)) {
                 if (isset($parsedValue['state'])) {
                     $updateData['current_state'] = strtolower(trim((string) $parsedValue['state']));
                 }
-                // Merge all JSON keys as individual attributes
                 $newAttributes = array_merge($existingAttributes, $parsedValue);
                 $updateData['attributes'] = $newAttributes;
             }
@@ -132,25 +119,15 @@ class MqttDeviceListener extends Command
             if (isset($parsedValue['friendly_name'])) {
                 $updateData['friendly_name'] = $parsedValue['friendly_name'];
             } elseif ($attribute === 'friendly_name') {
-                $updateData['friendly_name'] = is_string($parsedValue)
-                    ? $parsedValue
-                    : null;
+                $updateData['friendly_name'] = is_string($parsedValue) ? $parsedValue : null;
             }
 
-            // Extract config details for Home Assistant MQTT Discovery
+            // Home Assistant MQTT Discovery
             if ($attribute === 'config' && is_array($parsedValue)) {
-                if (isset($parsedValue['command_topic'])) {
-                    $newAttributes['command_topic'] = $parsedValue['command_topic'];
-                }
-                if (isset($parsedValue['payload_on'])) {
-                    $newAttributes['payload_on'] = $parsedValue['payload_on'];
-                }
-                if (isset($parsedValue['payload_off'])) {
-                    $newAttributes['payload_off'] = $parsedValue['payload_off'];
-                }
-                if (isset($parsedValue['name'])) {
-                    $updateData['friendly_name'] = $parsedValue['name'];
-                }
+                if (isset($parsedValue['command_topic'])) $newAttributes['command_topic'] = $parsedValue['command_topic'];
+                if (isset($parsedValue['payload_on'])) $newAttributes['payload_on'] = $parsedValue['payload_on'];
+                if (isset($parsedValue['payload_off'])) $newAttributes['payload_off'] = $parsedValue['payload_off'];
+                if (isset($parsedValue['name'])) $updateData['friendly_name'] = $parsedValue['name'];
                 $updateData['attributes'] = $newAttributes;
             }
 
@@ -159,6 +136,7 @@ class MqttDeviceListener extends Command
                 $updateData
             );
 
+            // Leading/trailing edge broadcast debounce
             $cacheKey = "broadcast:{$entityType}:{$entityId}";
             if (!Cache::has($cacheKey)) {
                 DeviceUpdated::dispatch($device);
@@ -184,7 +162,10 @@ class MqttDeviceListener extends Command
                 }
             }
 
-            if (($updateData['current_state'] ?? null) !== null) {
+            $stateChanged = ($updateData['current_state'] ?? null) !== null;
+            $attributesChanged = $existingAttributes !== $newAttributes;
+
+            if ($stateChanged || $attributesChanged) {
                 IoTEvent::create([
                     'entity_type' => $entityType,
                     'entity_id'   => $entityId,
@@ -194,7 +175,7 @@ class MqttDeviceListener extends Command
                     'created_at'  => now(),
                 ]);
 
-                $this->info("  -> State change logged: {$device->current_state}" . ($latencyMs !== null ? " (latency: {$latencyMs}ms)" : ''));
+                $this->info("  -> Event logged: " . ($stateChanged ? "state={$device->current_state}" : "attributes updated") . ($latencyMs !== null ? " (latency: {$latencyMs}ms)" : ''));
             }
         }, $qos);
 

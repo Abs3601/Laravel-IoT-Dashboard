@@ -20,9 +20,6 @@ class deviceController extends Controller
         ]);
     }
 
-    /**
-     * Show all devices of a given type.
-     */
     public function deviceDetails(string $type)
     {
         $devices = Device::where('entity_type', $type)
@@ -37,9 +34,6 @@ class deviceController extends Controller
         ]);
     }
 
-    /**
-     * Show a device and all its related sensors/entities.
-     */
     public function showDeviceGroup(string $deviceGroup)
     {
         $priorities = "CASE 
@@ -61,9 +55,17 @@ class deviceController extends Controller
             ->where('id', '!=', $device->id)
             ->get();
 
+        $history = $device->history()
+            ->limit(500)
+            ->get()
+            ->groupBy(function($item) {
+                return $item->created_at->format('Y-m-d');
+            });
+
         return view('device-group-detail', [
             'device' => $device,
             'relatedDevices' => $relatedDevices,
+            'historyGroups' => $history,
         ]);
     }
 }

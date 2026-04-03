@@ -78,7 +78,7 @@
 
         {{-- Related Sensors / Grouped Entities --}}
         @if($relatedDevices->count() > 0)
-            <h2 class="text-xl font-bold mb-4">Related Sensors</h2>
+            <h2 class="text-xl font-bold mb-4 dark:text-white">Related Sensors</h2>
             <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
                 @foreach($relatedDevices as $related)
                     @php
@@ -101,8 +101,38 @@
                         </div>
                     </div>
                 @endforeach
-            </div>
         @else
             <p class="text-gray-500">No related sensor data available for this device.</p>
         @endif
     </div>
+
+    {{-- Bottom Section for Activity --}}
+    <div class="container mx-auto p-4 max-w-4xl mt-8 border-t border-gray-100 dark:border-gray-800">
+        <h2 class="text-xl font-bold dark:text-white mb-6">Activity</h2>
+        
+        <div class="bg-card-dark rounded-3xl border border-transparent dark:border-gray-700 overflow-hidden shadow-xl">
+            <div class="max-h-[500px] overflow-y-auto custom-scrollbar">
+                @php $allEvents = $historyGroups->flatten(); @endphp
+                @forelse($historyGroups as $date => $events)
+                    <div class="sticky top-0 bg-[#25211d] px-6 py-3 border-b border-gray-700/50 z-10">
+                        <h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest">
+                            {{ \Carbon\Carbon::parse($date)->format('j F Y') }}
+                        </h3>
+                    </div>
+                    
+                    <div class="divide-y divide-gray-700/30">
+                        @foreach($events as $event)
+                            <x-activity-log-item 
+                                :event="$event" 
+                                :prev="$allEvents->where('id', '<', $event->id)->first()" 
+                                :device="$device" 
+                            />
+                        @endforeach
+                    </div>
+                @empty
+                    <div class="p-12 text-center text-gray-500 text-sm italic">No recent activity.</div>
+                @endforelse
+            </div>
+        </div>
+    </div>
+</div>

@@ -165,5 +165,3 @@ The listener can parse topics from:
 - Simple web dashboard showing lights and plugs
 - Live-updating cards using Livewire polling
 - Brightness slider with dynamic RGB colour support for lights
-
-<!-- Project state synchronized -->

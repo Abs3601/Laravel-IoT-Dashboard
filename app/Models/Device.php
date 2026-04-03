@@ -27,35 +27,29 @@ class Device extends Model
         'is_pinned' => 'boolean',
     ];
 
-    /**
-     * Send an MQTT command to this device.
-     */
     public function sendCommand(mixed $state): void
     {
         app(\App\Services\MqttService::class)->sendCommand($this, $state);
     }
 
-    /**
-     * Send an MQTT brightness command to this device.
-     */
     public function setBrightness(int $brightness): void
     {
         app(\App\Services\MqttService::class)->sendBrightness($this, $brightness);
     }
 
-    /**
-     * Send an MQTT color command to this device.
-     */
     public function setColor(string $hexColor): void
     {
         app(\App\Services\MqttService::class)->sendColor($this, $hexColor);
     }
 
-    /**
-     * Send an MQTT color temperature command to this device.
-     */
     public function setColorTemp(int $temp): void
     {
         app(\App\Services\MqttService::class)->sendColorTemp($this, $temp);
+    }
+
+    public function history()
+    {
+        return $this->hasMany(IoTEvent::class, 'entity_id', 'entity_id')
+            ->orderByDesc('id');
     }
 }
