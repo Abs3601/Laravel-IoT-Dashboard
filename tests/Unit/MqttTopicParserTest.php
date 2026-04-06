@@ -10,9 +10,8 @@ function parseTopic(array $parts): ?array
     return $method->invoke($listener, $parts);
 }
 
-// --- Home Assistant ---
-
-test('HA light config topic is parsed correctly', function () {
+// Home Assistant topics
+test('parses HA light configuration topics', function () {
     $result = parseTopic(['homeassistant', 'light', 'living_room', 'config']);
 
     expect($result)->toBe([
@@ -22,7 +21,7 @@ test('HA light config topic is parsed correctly', function () {
     ]);
 });
 
-test('HA sensor state topic is parsed correctly', function () {
+test('parses HA sensor state updates', function () {
     $result = parseTopic(['homeassistant', 'sensor', 'bedroom_temp', 'state']);
 
     expect($result)->toBe([
@@ -32,19 +31,16 @@ test('HA sensor state topic is parsed correctly', function () {
     ]);
 });
 
-test('HA status topic is filtered out', function () {
-    $result = parseTopic(['homeassistant', 'status']);
-    expect($result)->toBeNull();
+test('ignores generic HA status messages', function () {
+    expect(parseTopic(['homeassistant', 'status']))->toBeNull();
 });
 
-test('HA topic with fewer than 4 parts returns null', function () {
-    $result = parseTopic(['homeassistant', 'light', 'living_room']);
-    expect($result)->toBeNull();
+test('rejects incomplete HA topics', function () {
+    expect(parseTopic(['homeassistant', 'light', 'living_room']))->toBeNull();
 });
 
-// --- Zigbee2MQTT ---
-
-test('Zigbee2MQTT device topic is parsed correctly', function () {
+// Zigbee2MQTT topics
+test('extracts device data from Zigbee2MQTT', function () {
     $result = parseTopic(['zigbee2mqtt', 'my_bulb']);
 
     expect($result)->toBe([
@@ -54,24 +50,14 @@ test('Zigbee2MQTT device topic is parsed correctly', function () {
     ]);
 });
 
-test('Zigbee2MQTT bridge topics are filtered out', function () {
-    $result = parseTopic(['zigbee2mqtt', 'bridge', 'state']);
-    expect($result)->toBeNull();
+test('filters out bridge/command noise from Zigbee2MQTT', function () {
+    expect(parseTopic(['zigbee2mqtt', 'bridge', 'state']))->toBeNull();
+    expect(parseTopic(['zigbee2mqtt', 'my_bulb', 'set']))->toBeNull();
+    expect(parseTopic(['zigbee2mqtt', 'my_bulb', 'get']))->toBeNull();
 });
 
-test('Zigbee2MQTT /set command topics are filtered out', function () {
-    $result = parseTopic(['zigbee2mqtt', 'my_bulb', 'set']);
-    expect($result)->toBeNull();
-});
-
-test('Zigbee2MQTT /get command topics are filtered out', function () {
-    $result = parseTopic(['zigbee2mqtt', 'my_bulb', 'get']);
-    expect($result)->toBeNull();
-});
-
-// --- Tasmota ---
-
-test('Tasmota tele/STATE topic is parsed correctly', function () {
+// Tasmota topics
+test('parses Tasmota telemetry updates', function () {
     $result = parseTopic(['tele', 'my_switch', 'STATE']);
 
     expect($result)->toBe([
@@ -81,17 +67,12 @@ test('Tasmota tele/STATE topic is parsed correctly', function () {
     ]);
 });
 
-test('Tasmota LWT topic is filtered out', function () {
-    $result = parseTopic(['tele', 'my_switch', 'LWT']);
-    expect($result)->toBeNull();
+test('ignores Tasmota LWT and command topics', function () {
+    expect(parseTopic(['tele', 'my_switch', 'LWT']))->toBeNull();
+    expect(parseTopic(['cmnd', 'my_switch', 'POWER']))->toBeNull();
 });
 
-test('Tasmota cmnd topics are filtered out', function () {
-    $result = parseTopic(['cmnd', 'my_switch', 'POWER']);
-    expect($result)->toBeNull();
-});
-
-test('Tasmota stat topic is parsed correctly', function () {
+test('parses Tasmota status responses', function () {
     $result = parseTopic(['stat', 'my_switch', 'RESULT']);
 
     expect($result)->toBe([
@@ -101,9 +82,8 @@ test('Tasmota stat topic is parsed correctly', function () {
     ]);
 });
 
-// --- ESPHome ---
-
-test('ESPHome sensor state topic is parsed correctly', function () {
+// ESPHome topics
+test('correctly maps ESPHome sensor paths', function () {
     $result = parseTopic(['esphome', 'my_device', 'temperature', 'state']);
 
     expect($result)->toBe([
@@ -113,9 +93,8 @@ test('ESPHome sensor state topic is parsed correctly', function () {
     ]);
 });
 
-// --- Shelly ---
-
-test('Shelly relay topic is parsed correctly', function () {
+// Shelly topics
+test('flattens complex Shelly relay paths', function () {
     $result = parseTopic(['shellies', 'shelly1-abc123', 'relay', '0', 'power']);
 
     expect($result)->toBe([
@@ -125,14 +104,11 @@ test('Shelly relay topic is parsed correctly', function () {
     ]);
 });
 
-// --- Edge Cases ---
-
-test('single segment topic returns null', function () {
-    $result = parseTopic(['justonepart']);
-    expect($result)->toBeNull();
+// General constraints
+test('ignores non-device data like Plex', function () {
+    expect(parseTopic(['plex', 'my_device', 'state']))->toBeNull();
 });
 
-test('plex topics are filtered out', function () {
-    $result = parseTopic(['plex', 'my_device', 'state']);
-    expect($result)->toBeNull();
+test('rejects malformed or short topics', function () {
+    expect(parseTopic(['justonepart']))->toBeNull();
 });

@@ -370,7 +370,7 @@ class MqttDeviceListener extends Command
         $primaryTypes = ['light', 'switch', 'fan', 'climate', 'media_player', 'cover', 'lock', 'siren', 'button', 'number', 'input_boolean', 'input_select'];
         
         if (in_array($entityType, $primaryTypes)) {
-            Device::where('entity_id', 'LIKE', $entityId . '\_%')
+            Device::where('entity_id', 'LIKE', $entityId . '_%')
                 ->where('device_group', '!=', $entityId)
                 ->update(['device_group' => $entityId]);
                 
@@ -378,7 +378,7 @@ class MqttDeviceListener extends Command
         }
 
         $parentDevice = Device::whereIn('entity_type', $primaryTypes)
-            ->whereRaw("? LIKE CONCAT(entity_id, '\\\_%')", [$entityId])
+            ->whereRaw("? LIKE entity_id || '_%'", [$entityId])
             ->orderByRaw('LENGTH(entity_id) DESC')
             ->first();
 

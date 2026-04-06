@@ -10,50 +10,34 @@ function parseValue(string $message): mixed
     return $method->invoke($listener, $message);
 }
 
-test('string ON is returned as-is', function () {
+test('returns string ON as-is', function () {
     expect(parseValue('ON'))->toBe('ON');
 });
 
-test('string true becomes boolean true', function () {
-    expect(parseValue('true'))->toBe(true);
+test('converts boolean strings to boolean types', function () {
+    expect(parseValue('true'))->toBeTrue();
+    expect(parseValue('false'))->toBeFalse();
 });
 
-test('string false becomes boolean false', function () {
-    expect(parseValue('false'))->toBe(false);
-});
-
-test('numeric integer string becomes int', function () {
+test('converts numeric strings to int or float', function () {
     expect(parseValue('42'))->toBe(42);
-});
-
-test('numeric float string becomes float', function () {
     expect(parseValue('27.5'))->toBe(27.5);
 });
 
-test('valid JSON object becomes array', function () {
-    $result = parseValue('{"state":"ON","brightness":215}');
-
-    expect($result)->toBe(['state' => 'ON', 'brightness' => 215]);
+test('decodes valid JSON objects and arrays', function () {
+    expect(parseValue('{"state":"ON","brightness":215}'))->toBe(['state' => 'ON', 'brightness' => 215]);
+    expect(parseValue('[1,2,3]'))->toBe([1, 2, 3]);
 });
 
-test('valid JSON array becomes array', function () {
-    $result = parseValue('[1,2,3]');
-
-    expect($result)->toBe([1, 2, 3]);
-});
-
-test('empty string becomes null', function () {
+test('handles nulls and empty strings accurately', function () {
     expect(parseValue(''))->toBeNull();
-});
-
-test('string null becomes null', function () {
     expect(parseValue('null'))->toBeNull();
 });
 
-test('quoted string has quotes stripped', function () {
+test('strips surrounding quotes from strings', function () {
     expect(parseValue('"hello"'))->toBe('hello');
 });
 
-test('plain string is returned as-is', function () {
+test('returns plain strings unmodified', function () {
     expect(parseValue('some_value'))->toBe('some_value');
 });
