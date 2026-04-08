@@ -51,6 +51,12 @@ class MqttDeviceListener extends Command
                 'mqtt-client.connections.default.connection_settings.keep_alive_interval' => 600,
             ]);
         } else {
+            if (!Setting::get('onboarding_completed')) {
+                $this->error('Onboarding has not been completed yet.');
+                $this->info('Please visit the web dashboard to complete the onboarding process and configure your MQTT broker settings.');
+                return 1;
+            }
+
             $this->info('Connecting to MQTT broker...');
             config([
                 'mqtt-client.connections.default.host' => Setting::get('mqtt_host'),
