@@ -56,8 +56,8 @@ class MqttDeviceListener extends Command
                 'mqtt-client.connections.default.host' => Setting::get('mqtt_host'),
                 'mqtt-client.connections.default.port' => Setting::get('port'),
                 'mqtt-client.connections.default.client_id' => Setting::get('mqtt_client_id'),
-                'mqtt-client.connections.default.auth.username' => Setting::get('mqtt_auth_username'),
-                'mqtt-client.connections.default.auth.password' => Setting::get('mqtt_auth_password'),
+                'mqtt-client.connections.default.connection_settings.auth.username' => Setting::get('mqtt_auth_username') ?: null,
+                'mqtt-client.connections.default.connection_settings.auth.password' => Setting::get('mqtt_auth_password') ?: null,
                 'mqtt-client.connections.default.connection_settings.keep_alive_interval' => 600,
             ]);
         }
