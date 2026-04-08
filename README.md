@@ -23,7 +23,6 @@ cd Laravel-IoT-Dashboard
 The environment file must be created manually to configure your local settings.
 ```bash
 cp .env.example .env
-php artisan key:generate
 ```
 Open the `.env` file and configure your database settings (MySQL is recommended for the analytics features).
 
@@ -33,6 +32,7 @@ Install the required packages and build the frontend assets:
 composer install
 npm install
 npm run build
+php artisan key:generate
 ```
 
 ### 5. Database Migration
